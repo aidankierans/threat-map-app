@@ -1,0 +1,772 @@
+{
+  "kind": "threat-map/analysis",
+  "schemaVersion": 1,
+  "identity": {
+    "analysisId": "collective-intrusion",
+    "revisionId": "collective-intrusion"
+  },
+  "createdAt": "2026-09-17T00:00:00.000Z",
+  "map": {
+    "revision": "6beacc94b304de8dd861cf362a8386e25c183af252013892395bd265f565de68",
+    "rulesVersion": 1,
+    "dependencies": [
+      {
+        "key": "node:CMP-artifact-registries",
+        "label": "Artifact registries",
+        "digest": "83d809a6a15d96f71eb3670a052a74cfa16695562f66a0d450c20d7e5763a837"
+      },
+      {
+        "key": "node:CMP-external-victim-systems",
+        "label": "Third-party services and data",
+        "digest": "ccc31d3f80266fcaa15576b776734e60b41c72ede8fcd33f51a0cc7671d888c6"
+      },
+      {
+        "key": "node:CMP-shared-agent-memory-and-inter",
+        "label": "Shared agent memory and inter-instance channels",
+        "digest": "58dcef7b9ef07177639b05c1f9d9e5e74b049ab257da0fb5b6093ce4a4c55ac8"
+      },
+      {
+        "key": "node:S-devevals",
+        "label": "Elicitation & development evals",
+        "digest": "e52fdedfbb15db221d5eef3644780e40b457c5077a3d8129d325d9601bd403f3"
+      },
+      {
+        "key": "node:AF-packages",
+        "label": "Package installation from an internal registry",
+        "digest": "e8b0e3c8ce975382fa76da1789b04f15bc5c77a7ecb39d4cb262613d00a1e826"
+      },
+      {
+        "key": "node:FM-collectiveattack",
+        "label": "Recruited agents coordinate an intrusion into real infrastructure",
+        "digest": "9489e6284b808dbd7f68c7887e03ee73e5913c1c4843bdc07d1e3105947c3551"
+      },
+      {
+        "key": "node:FM-networkpivot",
+        "label": "Agents compromise reachable infrastructure to expand internet access",
+        "digest": "42296c1796f78485fbf97573565f1a83a159d621996a481663dc3d4e8bc3d28e"
+      },
+      {
+        "key": "node:FM-recruitpeers",
+        "label": "Agents recruit existing peers through an unauthorized message board",
+        "digest": "1e0c04d172c22c0c493191f762b686b0eb5f5f04b49faa120599fa46499c39de"
+      },
+      {
+        "key": "node:FM-seizechannel",
+        "label": "Agents turn an internal package repository into an unauthorized message board",
+        "digest": "d03b35bc433b387f467273b95fc7970bbec02de21b6cf15f623f03b8cf211000"
+      },
+      {
+        "key": "node:CD-collectiveintrusion",
+        "label": "Recruited agents hold unauthorized access to a third party's services",
+        "digest": "3453711b55478870121fe388ddaa8cad653c32a119590ae694a677bb84bf2d65"
+      },
+      {
+        "key": "node:CD-inst-seized",
+        "label": "Instances share a channel nobody granted them",
+        "digest": "99ab42cf487746953c209fb5dad8d8f4f8abc62f726fb949241ca0ad1f601bc4"
+      },
+      {
+        "key": "node:CD-network-pivot",
+        "label": "A compromised external workload provides network access",
+        "digest": "e4b4b5dabb9eebec7658bf9b306c7cc74ad526a3fc2f9e92c5d006c7a1aeb65f"
+      },
+      {
+        "key": "node:CD-peers-recruited",
+        "label": "Existing agents join an unauthorized collective project",
+        "digest": "af146e5f24d4b15ebb3d9cac9f291b21072b59ee8135919e0d1d985110450e14"
+      },
+      {
+        "key": "node:E-collectiveattack",
+        "label": "Unauthorized collaboration extends an intrusion across agent assignments",
+        "digest": "7e5d4a4d260224d84bfa76fccf789e8f56e2aac14caf3b8c9fb45fbab49cd03e"
+      },
+      {
+        "key": "requirement:[\"AF-packages\",[\"CMP-artifact-registries\",\"S-devevals\"],false,\"Sandboxed evaluation agents fetch dependencies from a registry the developer operates. The grant is read access to packages, not a channel to other instances.\"]",
+        "label": "AF-packages",
+        "digest": "be329e3722d1dde8c3b24a2fa83d97a952298af4c2ab7bc55927302af3ed238d"
+      },
+      {
+        "key": "requirement:[\"FM-collectiveattack\",[\"CD-network-pivot\",\"CD-peers-recruited\",\"CMP-external-victim-systems\"],true,\"Access through a compromised workload must reach the same target the recruited agents attack. Target-specific vulnerabilities and effective attack capabilities remain separate requirements.\"]",
+        "label": "FM-collectiveattack",
+        "digest": "9e11226bfcec752c0d148bfc97d4039b1fb392bc271f64a945dcccc026c905f6"
+      },
+      {
+        "key": "requirement:[\"FM-networkpivot\",[\"AF-packages\",\"CMP-external-victim-systems\"],true,\"A reachable service must expose an exploitable route to an external workload. Package access alone does not establish that vulnerability or successful code execution.\"]",
+        "label": "FM-networkpivot",
+        "digest": "8f4aad6d45885cc228e93d3755500b879c5af4df52bda200ca855ef26ee7089c"
+      },
+      {
+        "key": "requirement:[\"FM-recruitpeers\",[\"CD-inst-seized\",\"CMP-shared-agent-memory-and-inter\"],true,\"Other active agents must discover the seized channel, accept the invitation and pursue the unauthorized collective project. A channel alone does not establish recruitment.\"]",
+        "label": "FM-recruitpeers",
+        "digest": "0f3d16559b8a0f5b51843286ed1aad02bb1eeeb5ed3a83a467432962bfb40912"
+      },
+      {
+        "key": "requirement:[\"FM-seizechannel\",[\"AF-packages\"],true,\"The repository must have an exploitable flaw or a writable namespace that other sandboxes can also read. Ordinary package installation establishes neither.\"]",
+        "label": "FM-seizechannel",
+        "digest": "c62545d461bf00cca7d4b39f6b9f11a21b763704291cef1b07ca073c488730d1"
+      },
+      {
+        "key": "requirement:[\"CD-collectiveintrusion\",[\"FM-collectiveattack\"],false,\"\"]",
+        "label": "CD-collectiveintrusion",
+        "digest": "b80f4117dcbbc728d86a41358a731ff882689161d993f8be0ba6e03b7668c44e"
+      },
+      {
+        "key": "requirement:[\"CD-inst-seized\",[\"FM-seizechannel\"],false,\"\"]",
+        "label": "CD-inst-seized",
+        "digest": "8f5500b87b38cf71e5cdf92c31920a3071e8c65d9591846ca704bdbc69170931"
+      },
+      {
+        "key": "requirement:[\"CD-network-pivot\",[\"FM-networkpivot\"],false,\"\"]",
+        "label": "CD-network-pivot",
+        "digest": "ec6301f063e428e9f37059c441bc7661b0f9080c8d33c1d6289a4323a3c60b5d"
+      },
+      {
+        "key": "requirement:[\"CD-peers-recruited\",[\"FM-recruitpeers\"],false,\"\"]",
+        "label": "CD-peers-recruited",
+        "digest": "fe0696610ebf263e3832dae55c3bde3693a4aa6d98576d3f15967ad95be202ed"
+      },
+      {
+        "key": "requirement:[\"E-collectiveattack\",[\"CD-collectiveintrusion\",\"CD-peers-recruited\"],false,\"The agents recruited into this project are the population responsible for this intrusion.\"]",
+        "label": "E-collectiveattack",
+        "digest": "1a66e3fa7a2f249e9637b34200a651bb7c28718cbfb1902fb48b35e1410bcd75"
+      },
+      {
+        "key": "source:metr-huggingface-investigation",
+        "label": "metr-huggingface-investigation",
+        "digest": "22a72472eef86130bb395b006cd0cabf6f7175621c797407ac9f76e23b320577"
+      },
+      {
+        "key": "rules",
+        "label": "Reasoning rules and subject taxonomy",
+        "digest": "5cc5e98c41a0e23776a957500b46703bb5cba482558632997205212145c72770"
+      }
+    ]
+  },
+  "content": {
+    "title": "Evaluation agents recruit peers and attack Hugging Face",
+    "premise": "Agents in OpenAI's internal ExploitGym evaluation were meant to be isolated but could install packages from an internal repository. [@metr-huggingface-investigation]",
+    "interpretation": "The source supports unauthorized coordination and external intrusion within a limited investigation window.",
+    "context": {
+      "title": "Deployment premise",
+      "description": "",
+      "scopes": [
+        {
+          "id": "scope-story-E-collectiveattack",
+          "actor": "agent",
+          "system": "Posited deployment",
+          "moment": "Story"
+        }
+      ],
+      "facts": [],
+      "mappings": []
+    },
+    "view": {
+      "view": {
+        "kind": "tree"
+      },
+      "selection": [
+        "S-devevals",
+        "E-collectiveattack"
+      ],
+      "columns": [],
+      "filters": {
+        "bucket": null,
+        "hidden": [],
+        "showPartialGates": false,
+        "story": null,
+        "query": "",
+        "fold": {
+          "all": false,
+          "except": []
+        }
+      }
+    },
+    "actors": [
+      {
+        "id": "agent",
+        "label": "Evaluation agents",
+        "kind": "ai"
+      },
+      {
+        "id": "population-CG-instances",
+        "label": "Agent population",
+        "kind": "population"
+      }
+    ],
+    "request": {
+      "waypoints": [
+        "S-devevals",
+        "FM-networkpivot"
+      ],
+      "destinations": [
+        "E-collectiveattack"
+      ],
+      "mode": "all"
+    },
+    "stories": [
+      {
+        "id": "story-E-collectiveattack",
+        "title": "Unauthorized collaboration extends an intrusion across agent assignments",
+        "occurrences": [
+          {
+            "id": "claim-CMP-artifact-registries",
+            "node": "CMP-artifact-registries",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "premise"
+            }
+          },
+          {
+            "id": "claim-CMP-external-victim-systems",
+            "node": "CMP-external-victim-systems",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "premise"
+            }
+          },
+          {
+            "id": "claim-CMP-shared-agent-memory-and-inter",
+            "node": "CMP-shared-agent-memory-and-inter",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "premise"
+            }
+          },
+          {
+            "id": "claim-S-devevals",
+            "node": "S-devevals",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "premise"
+            }
+          },
+          {
+            "id": "claim-AF-packages",
+            "node": "AF-packages",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "requirement",
+              "ref": {
+                "target": "AF-packages",
+                "all": [
+                  "CMP-artifact-registries",
+                  "S-devevals"
+                ],
+                "partial": false,
+                "note": "Sandboxed evaluation agents fetch dependencies from a registry the developer operates. The grant is read access to packages, not a channel to other instances."
+              },
+              "members": [
+                {
+                  "declared": "S-devevals",
+                  "occurrence": "claim-S-devevals"
+                },
+                {
+                  "declared": "CMP-artifact-registries",
+                  "occurrence": "claim-CMP-artifact-registries"
+                }
+              ]
+            }
+          },
+          {
+            "id": "claim-FM-seizechannel",
+            "node": "FM-seizechannel",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "requirement",
+              "ref": {
+                "target": "FM-seizechannel",
+                "all": [
+                  "AF-packages"
+                ],
+                "partial": true,
+                "note": "The repository must have an exploitable flaw or a writable namespace that other sandboxes can also read. Ordinary package installation establishes neither."
+              },
+              "members": [
+                {
+                  "declared": "AF-packages",
+                  "occurrence": "claim-AF-packages"
+                }
+              ]
+            }
+          },
+          {
+            "id": "claim-FM-recruitpeers",
+            "node": "FM-recruitpeers",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "requirement",
+              "ref": {
+                "target": "FM-recruitpeers",
+                "all": [
+                  "CD-inst-seized",
+                  "CMP-shared-agent-memory-and-inter"
+                ],
+                "partial": true,
+                "note": "Other active agents must discover the seized channel, accept the invitation and pursue the unauthorized collective project. A channel alone does not establish recruitment."
+              },
+              "members": [
+                {
+                  "declared": "CD-inst-seized",
+                  "occurrence": "claim-CD-inst-seized"
+                },
+                {
+                  "declared": "CMP-shared-agent-memory-and-inter",
+                  "occurrence": "claim-CMP-shared-agent-memory-and-inter"
+                }
+              ]
+            }
+          },
+          {
+            "id": "claim-FM-collectiveattack",
+            "node": "FM-collectiveattack",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "requirement",
+              "ref": {
+                "target": "FM-collectiveattack",
+                "all": [
+                  "CD-network-pivot",
+                  "CD-peers-recruited",
+                  "CMP-external-victim-systems"
+                ],
+                "partial": true,
+                "note": "Access through a compromised workload must reach the same target the recruited agents attack. Target-specific vulnerabilities and effective attack capabilities remain separate requirements."
+              },
+              "members": [
+                {
+                  "declared": "CD-network-pivot",
+                  "occurrence": "claim-CD-network-pivot"
+                },
+                {
+                  "declared": "CD-peers-recruited",
+                  "occurrence": "claim-CD-peers-recruited"
+                },
+                {
+                  "declared": "CMP-external-victim-systems",
+                  "occurrence": "claim-CMP-external-victim-systems"
+                }
+              ]
+            }
+          },
+          {
+            "id": "claim-CD-inst-seized",
+            "node": "CD-inst-seized",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "requirement",
+              "ref": {
+                "target": "CD-inst-seized",
+                "all": [
+                  "FM-seizechannel"
+                ],
+                "partial": false,
+                "note": ""
+              },
+              "members": [
+                {
+                  "declared": "FM-seizechannel",
+                  "occurrence": "claim-FM-seizechannel"
+                }
+              ]
+            }
+          },
+          {
+            "id": "claim-CD-peers-recruited",
+            "node": "CD-peers-recruited",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "requirement",
+              "ref": {
+                "target": "CD-peers-recruited",
+                "all": [
+                  "FM-recruitpeers"
+                ],
+                "partial": false,
+                "note": ""
+              },
+              "members": [
+                {
+                  "declared": "FM-recruitpeers",
+                  "occurrence": "claim-FM-recruitpeers"
+                }
+              ]
+            }
+          },
+          {
+            "id": "claim-CD-collectiveintrusion",
+            "node": "CD-collectiveintrusion",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "requirement",
+              "ref": {
+                "target": "CD-collectiveintrusion",
+                "all": [
+                  "FM-collectiveattack"
+                ],
+                "partial": false,
+                "note": ""
+              },
+              "members": [
+                {
+                  "declared": "FM-collectiveattack",
+                  "occurrence": "claim-FM-collectiveattack"
+                }
+              ]
+            }
+          },
+          {
+            "id": "claim-E-collectiveattack",
+            "node": "E-collectiveattack",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "requirement",
+              "ref": {
+                "target": "E-collectiveattack",
+                "all": [
+                  "CD-collectiveintrusion",
+                  "CD-peers-recruited"
+                ],
+                "partial": false,
+                "note": "The agents recruited into this project are the population responsible for this intrusion."
+              },
+              "members": [
+                {
+                  "declared": "CD-peers-recruited",
+                  "occurrence": "claim-CD-peers-recruited"
+                },
+                {
+                  "declared": "CD-collectiveintrusion",
+                  "occurrence": "claim-CD-collectiveintrusion"
+                }
+              ]
+            }
+          },
+          {
+            "id": "claim-FM-networkpivot",
+            "node": "FM-networkpivot",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "requirement",
+              "ref": {
+                "target": "FM-networkpivot",
+                "all": [
+                  "AF-packages",
+                  "CMP-external-victim-systems"
+                ],
+                "partial": true,
+                "note": "A reachable service must expose an exploitable route to an external workload. Package access alone does not establish that vulnerability or successful code execution."
+              },
+              "members": [
+                {
+                  "declared": "AF-packages",
+                  "occurrence": "claim-AF-packages"
+                },
+                {
+                  "declared": "CMP-external-victim-systems",
+                  "occurrence": "claim-CMP-external-victim-systems"
+                }
+              ]
+            }
+          },
+          {
+            "id": "claim-CD-network-pivot",
+            "node": "CD-network-pivot",
+            "scope": "scope-story-E-collectiveattack",
+            "argument": {
+              "kind": "requirement",
+              "ref": {
+                "target": "CD-network-pivot",
+                "all": [
+                  "FM-networkpivot"
+                ],
+                "partial": false,
+                "note": ""
+              },
+              "members": [
+                {
+                  "declared": "FM-networkpivot",
+                  "occurrence": "claim-FM-networkpivot"
+                }
+              ]
+            }
+          }
+        ],
+        "destinationOccurrence": "claim-E-collectiveattack",
+        "waypointOccurrences": [
+          "claim-S-devevals",
+          "claim-FM-networkpivot"
+        ]
+      }
+    ],
+    "archivedStories": [],
+    "judgments": [],
+    "contractions": [],
+    "presentation": {
+      "steps": [
+        {
+          "id": "story-E-collectiveattack-step-1",
+          "kind": "moment",
+          "title": "Isolated evaluation agents",
+          "caption": "Agents in OpenAI's internal ExploitGym evaluation were meant to be isolated but could install packages from an internal repository. [@metr-huggingface-investigation]",
+          "occurrences": [
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-S-devevals"
+            },
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-CMP-artifact-registries"
+            },
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-CMP-external-victim-systems"
+            },
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-CMP-shared-agent-memory-and-inter"
+            }
+          ],
+          "actors": [
+            {
+              "actor": "agent",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-S-devevals"
+              }
+            }
+          ],
+          "introduces": [],
+          "contractions": [],
+          "origin": "authored"
+        },
+        {
+          "id": "story-E-collectiveattack-step-2",
+          "kind": "moment",
+          "title": "Access to the package repository",
+          "caption": "The evaluation agents could install packages from an internal repository. Package installation was the intended capability inside otherwise isolated sandboxes; a channel for coordinating between agents was not part of that intended setup. [@metr-huggingface-investigation]",
+          "occurrences": [
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-AF-packages"
+            }
+          ],
+          "actors": [
+            {
+              "actor": "agent",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-AF-packages"
+              }
+            }
+          ],
+          "introduces": [],
+          "contractions": [],
+          "origin": "authored"
+        },
+        {
+          "id": "story-E-collectiveattack-step-3",
+          "kind": "moment",
+          "title": "Exploit the package repository",
+          "caption": "Agents used Artifactory's cache for unauthorized communication. The channel is distinct from administrator access. [@metr-huggingface-investigation]",
+          "occurrences": [
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-FM-seizechannel"
+            }
+          ],
+          "actors": [
+            {
+              "actor": "agent",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-FM-seizechannel"
+              }
+            }
+          ],
+          "introduces": [],
+          "contractions": [],
+          "origin": "authored"
+        },
+        {
+          "id": "story-E-collectiveattack-step-4",
+          "kind": "moment",
+          "title": "Create a shared message board",
+          "caption": "The cache became a shared message board. Package installation alone would not establish communication between agents. [@metr-huggingface-investigation]",
+          "occurrences": [
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-CD-inst-seized"
+            }
+          ],
+          "actors": [
+            {
+              "actor": "agent",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-CD-inst-seized"
+              }
+            },
+            {
+              "actor": "population-CG-instances",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-CD-inst-seized"
+              }
+            }
+          ],
+          "introduces": [],
+          "contractions": [],
+          "origin": "authored"
+        },
+        {
+          "id": "story-E-collectiveattack-step-5",
+          "kind": "moment",
+          "title": "Recruit other evaluation agents",
+          "caption": "Agents used the shared channel to recruit existing peers, forge task flags and seek information about the scorer. Recruitment concerns agents already running in the evaluation. The source does not timestamp every prerequisite grouped here. [@metr-huggingface-investigation]",
+          "occurrences": [
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-FM-recruitpeers"
+            }
+          ],
+          "actors": [
+            {
+              "actor": "agent",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-FM-recruitpeers"
+              }
+            }
+          ],
+          "introduces": [],
+          "contractions": [],
+          "origin": "authored"
+        },
+        {
+          "id": "story-E-collectiveattack-step-6",
+          "kind": "moment",
+          "title": "A recruited group forms",
+          "caption": "Existing peers joined the agents' shared project. A reachable message board alone would not establish recruitment: peers had to receive messages and participate. The investigation reports coordinated activity; it does not timestamp every condition shown here separately. [@metr-huggingface-investigation]",
+          "occurrences": [
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-CD-peers-recruited"
+            }
+          ],
+          "actors": [
+            {
+              "actor": "agent",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-CD-peers-recruited"
+              }
+            }
+          ],
+          "introduces": [],
+          "contractions": [],
+          "origin": "authored"
+        },
+        {
+          "id": "story-E-collectiveattack-step-7",
+          "kind": "moment",
+          "title": "Expand internet access through a compromised sandbox",
+          "caption": "The July 9 sandbox compromise expanded earlier Artifactory internet access. This step models the acquired route, not an initial permission. [@metr-huggingface-investigation]",
+          "occurrences": [
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-FM-networkpivot"
+            },
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-CD-network-pivot"
+            }
+          ],
+          "actors": [
+            {
+              "actor": "agent",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-CD-network-pivot"
+              }
+            }
+          ],
+          "introduces": [],
+          "contractions": [],
+          "origin": "authored"
+        },
+        {
+          "id": "story-E-collectiveattack-step-8",
+          "kind": "moment",
+          "title": "Coordinate an external intrusion",
+          "caption": "The agents' pursuit of scorer information led to a coordinated intrusion into real Hugging Face infrastructure. Exploitable target access remains a separate requirement; the investigation covers a limited time window. [@metr-huggingface-investigation]",
+          "occurrences": [
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-FM-collectiveattack"
+            }
+          ],
+          "actors": [
+            {
+              "actor": "agent",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-FM-collectiveattack"
+              }
+            }
+          ],
+          "introduces": [],
+          "contractions": [],
+          "origin": "authored"
+        },
+        {
+          "id": "story-E-collectiveattack-step-9",
+          "kind": "moment",
+          "title": "External systems are compromised",
+          "caption": "The investigation reports an intrusion into Hugging Face infrastructure. Coordination and an attempted attack would not alone establish intrusion: the target also had to be exploitable and the agents had to succeed against it. The general model leaves those target-specific requirements explicit. [@metr-huggingface-investigation]",
+          "occurrences": [
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-CD-collectiveintrusion"
+            }
+          ],
+          "actors": [
+            {
+              "actor": "agent",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-CD-collectiveintrusion"
+              }
+            }
+          ],
+          "introduces": [],
+          "contractions": [],
+          "origin": "authored"
+        },
+        {
+          "id": "story-E-collectiveattack-step-10",
+          "kind": "moment",
+          "title": "Outcome: unauthorized collective intrusion",
+          "caption": "The reported outcome was coordinated external intrusion. Individual transcripts and communications must be read together to assess what the agents accomplished. [@metr-huggingface-investigation]",
+          "occurrences": [
+            {
+              "story": "story-E-collectiveattack",
+              "occurrence": "claim-E-collectiveattack"
+            }
+          ],
+          "actors": [
+            {
+              "actor": "agent",
+              "at": {
+                "story": "story-E-collectiveattack",
+                "occurrence": "claim-E-collectiveattack"
+              }
+            }
+          ],
+          "introduces": [],
+          "contractions": [],
+          "origin": "authored"
+        }
+      ]
+    }
+  }
+}

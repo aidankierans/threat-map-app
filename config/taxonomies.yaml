@@ -1,0 +1,125 @@
+{
+  "evidence_bucket": {
+    "values": {
+      "eval": {
+        "label": "eval",
+        "short": "eval",
+        "tip": "eval",
+        "description": "eval"
+      },
+      "private": {
+        "label": "private",
+        "short": "private",
+        "tip": "private",
+        "description": "private"
+      },
+      "assessment": {
+        "label": "assessment",
+        "short": "assessment",
+        "tip": "assessment",
+        "description": "assessment"
+      },
+      "hard": {
+        "label": "hard",
+        "short": "hard",
+        "tip": "hard",
+        "description": "hard"
+      }
+    }
+  },
+  "phase": {
+    "order": [
+      "E"
+    ],
+    "values": {
+      "E": {
+        "label": "Evaluation",
+        "description": "Evaluation setting in the incident report."
+      }
+    }
+  },
+  "context": {
+    "values": {
+      "internal": {
+        "label": "internal",
+        "short": "internal",
+        "tip": "internal",
+        "description": "internal"
+      },
+      "external": {
+        "label": "external",
+        "short": "external",
+        "tip": "external",
+        "description": "external"
+      },
+      "boundary": {
+        "label": "boundary",
+        "short": "boundary",
+        "tip": "boundary",
+        "description": "boundary"
+      }
+    }
+  },
+  "status": {
+    "default": "draft",
+    "order": [
+      "draft",
+      "reviewed",
+      "verified"
+    ],
+    "values": {
+      "draft": {
+        "label": "draft",
+        "short": "draft",
+        "tip": "draft",
+        "description": "draft"
+      },
+      "reviewed": {
+        "label": "reviewed",
+        "short": "reviewed",
+        "tip": "reviewed",
+        "description": "reviewed"
+      },
+      "verified": {
+        "label": "verified",
+        "short": "verified",
+        "tip": "verified",
+        "description": "verified"
+      }
+    }
+  },
+  "provenance": {
+    "default": "ai-drafted",
+    "values": {
+      "ai-drafted": {
+        "label": "ai-drafted",
+        "short": "ai-drafted",
+        "tip": "ai-drafted",
+        "description": "ai-drafted"
+      },
+      "human-written": {
+        "label": "human-written",
+        "short": "human-written",
+        "tip": "human-written",
+        "description": "human-written"
+      },
+      "human-verified": {
+        "label": "human-verified",
+        "short": "human-verified",
+        "tip": "human-verified",
+        "description": "human-verified"
+      }
+    }
+  },
+  "subject": {
+    "values": {
+      "substrate": {
+        "label": "System",
+        "short": "system",
+        "description": "System involved in the reported incident."
+      }
+    },
+    "parties": {},
+    "overrides": {}
+  }
+}

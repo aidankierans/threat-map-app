@@ -1,0 +1,78 @@
+{
+  "description": "Only the Hugging Face case and the nodes needed to display its selected story are included. Private alternative prerequisite groups, dependency fingerprints, taxonomies, and project documentation are excluded.",
+  "sourceKeys": [
+    "metr-huggingface-investigation"
+  ],
+  "nodes": [
+    {
+      "id": "CMP-artifact-registries",
+      "source": "content/components/CMP-artifact-registries.md",
+      "adapted": true
+    },
+    {
+      "id": "CMP-external-victim-systems",
+      "source": "content/components/CMP-external-victim-systems.md",
+      "adapted": true
+    },
+    {
+      "id": "CMP-shared-agent-memory-and-inter",
+      "source": "content/components/CMP-shared-agent-memory-and-inter.md",
+      "adapted": true
+    },
+    {
+      "id": "S-devevals",
+      "source": "content/stages/S-devevals.md",
+      "adapted": true
+    },
+    {
+      "id": "AF-packages",
+      "source": "content/affordances/AF-packages.md",
+      "adapted": true
+    },
+    {
+      "id": "FM-seizechannel",
+      "source": "content/failure-modes/FM-seizechannel.md",
+      "adapted": false
+    },
+    {
+      "id": "FM-recruitpeers",
+      "source": "content/failure-modes/FM-recruitpeers.md",
+      "adapted": false
+    },
+    {
+      "id": "FM-collectiveattack",
+      "source": "content/failure-modes/FM-collectiveattack.md",
+      "adapted": false
+    },
+    {
+      "id": "CD-inst-seized",
+      "source": "content/conditions/CD-inst-seized.md",
+      "adapted": true
+    },
+    {
+      "id": "CD-peers-recruited",
+      "source": "content/conditions/CD-peers-recruited.md",
+      "adapted": false
+    },
+    {
+      "id": "CD-collectiveintrusion",
+      "source": "content/conditions/CD-collectiveintrusion.md",
+      "adapted": false
+    },
+    {
+      "id": "E-collectiveattack",
+      "source": "content/events/E-collectiveattack.md",
+      "adapted": false
+    },
+    {
+      "id": "FM-networkpivot",
+      "source": "content/failure-modes/FM-networkpivot.md",
+      "adapted": false
+    },
+    {
+      "id": "CD-network-pivot",
+      "source": "content/conditions/CD-network-pivot.md",
+      "adapted": false
+    }
+  ]
+}

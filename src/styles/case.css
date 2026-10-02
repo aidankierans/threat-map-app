@@ -1,0 +1,124 @@
+/* Canvas grades. Weight and dash distinguish moments without depending on hue. */
+:root {
+  --case-now: var(--ink-1);
+  --case-done: var(--ink-2);
+  --case-later: var(--ink-3);
+  --case-outside: 0.16;
+  --case-note: var(--surface-1);
+}
+:root[data-theme="dark"] {
+  --case-outside: 0.22;
+}
+.case-canvas .node.now .box { stroke: var(--case-now); stroke-width: 4; vector-effect: non-scaling-stroke; fill: color-mix(in srgb, var(--plane) 88%, var(--case-now)); }
+.case-canvas .node.done .box { stroke: var(--case-done); stroke-width: 1.8; }
+.case-canvas .node.near .box { stroke: var(--case-later); stroke-dasharray: 4 3; }
+.case-canvas .node.cold, .case-canvas .edge.cold { opacity: var(--case-outside); }
+.case-canvas .edge.now { stroke: var(--case-now); stroke-width: 3.5; vector-effect: non-scaling-stroke; opacity: 1; }
+.case-canvas .gate.now .gatestem, .case-canvas .gate.now .gatebody { stroke: var(--case-now); stroke-width: 3; vector-effect: non-scaling-stroke; opacity: 1; }
+.case-actor { transition: transform 320ms ease; cursor: help; }
+.case-actor > circle:first-of-type { fill: var(--surface-1); stroke: var(--case-now); stroke-width: 1.5; }
+.case-actor path, .case-actor rect, .case-actor > circle:not(:first-of-type) { fill: none; stroke: var(--case-now); stroke-width: 1.2; }
+@media (prefers-reduced-motion: reduce) { .case-actor { transition: none; } }
+
+/* Timeline rail and workspace. All new controls stay outside the canvas. */
+.case-workspace { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; }
+.case-toolbar, .case-actions, .case-navigation, .case-insert, .case-timeline-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.case-toolbar { padding: 8px 12px; border-bottom: 1px solid var(--grid); }
+.case-playback { grid-area: playback; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 12px; background: var(--plane); border-bottom: 1px solid var(--grid); border-right: 1px solid var(--grid); }
+.case-playback-buttons { display: flex; gap: 6px; }
+.case-playback button { min-width: 36px; min-height: 36px; }
+.case-playback-buttons > button:nth-child(2) { min-width: 60px; }
+.case-playback > span { flex-shrink: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.case-workspace button:not(.idlink), .case-menu button { font: inherit; color: var(--ink-1); background: var(--surface-1); border: 1px solid var(--axis); border-radius: 4px; padding: 4px 7px; cursor: pointer; }
+.case-playback button[aria-pressed="true"] { background: var(--s1); border-color: var(--s1); color: #fff; }
+.case-workspace button:disabled, .case-menu button:disabled { opacity: 0.45; cursor: default; }
+.case-workspace button:focus-visible, .case-menu button:focus-visible { outline: 2px solid var(--ink-1); outline-offset: 2px; }
+.case-columns { --timeline-width: 250px; display: grid; grid-template-columns: var(--timeline-width) minmax(180px, 1fr) minmax(300px, 390px); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "playback canvas panel" "timeline canvas panel"; flex: 1; min-height: 0; }
+.case-columns > .case-playback, .case-columns > .case-timeline { width: min(var(--timeline-width), 100%); justify-self: start; }
+/* The timeline overlays the canvas; toggling it never changes the map viewport. */
+.case-columns > .canvas { grid-column: 1 / 3; grid-row: 1 / 3; isolation: isolate; min-width: 0; min-height: 0; height: 100%; }
+.case-timeline { grid-area: timeline; z-index: 2; padding: 12px; overflow-y: auto; background: var(--plane); border-right: 1px solid var(--grid); }
+.case-timeline ol { padding: 0; list-style: none; }
+.case-step { border: 1px solid var(--grid); border-radius: 6px; padding: 10px; margin: 10px 0; }
+.case-step.current { border: 2px solid var(--ink-1); }
+.case-step-jump { display: block; width: 100%; text-align: left; font-weight: 600; }
+.case-step.reading { padding: 0; border: 0; }
+.case-workspace .case-step.reading > .case-step-jump { padding: 12px; border: 1px solid var(--grid); border-radius: 6px; font-weight: 600; }
+.case-workspace .case-step.reading.current > .case-step-jump { border-color: var(--ink-1); box-shadow: inset 0 0 0 1px var(--ink-1); }
+.case-workspace .case-step.reading > .case-step-jump:hover { background: var(--plane); border-color: var(--ink-1); }
+.case-step small { display: block; color: var(--ink-2); }
+.case-step p { font-size: 12px; }
+.case-step-edit label, .case-panel label, .case-details label { display: block; margin: 8px 0; }
+.case-step-edit input, .case-step-edit textarea, .case-panel textarea, .case-details textarea, .case-details input { width: 100%; color: var(--ink-1); background: var(--plane); border: 1px solid var(--axis); padding: 6px; }
+.case-step-edit textarea { min-height: 110px; }
+.case-assigned { display: flex; justify-content: space-between; font-size: 12px; gap: 4px; margin: 4px 0; }
+.case-pick { padding: 8px; border-bottom: 1px solid var(--axis); }
+.case-menu { position: relative; }
+.case-menu > .case-menu-trigger { background: linear-gradient(120deg, #3346a8, #754096); color: #fff; border: 1px solid #7868bb; border-radius: 6px; padding: 4px 9px; font: inherit; font-size: 12.5px; font-weight: 650; box-shadow: 0 2px 8px #44377b26; cursor: pointer; }
+.case-menu > .case-menu-trigger:hover, .case-menu[open] > .case-menu-trigger { background: linear-gradient(120deg, #293985, #60317e); }
+.case-menu-trigger:focus-visible { outline: 2px solid var(--ink-1); outline-offset: 3px; }
+.case-create-form { padding: 12px 18px; border-bottom: 1px solid var(--axis); background: var(--surface-1); max-height: 40vh; overflow-y: auto; flex: 0 0 auto; }
+.case-create-form p { margin: 4px 0 10px; color: var(--ink-2); }
+.case-create-fields { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.case-create-fields label { display: grid; gap: 4px; flex: 1 1 220px; min-width: 0; }
+.case-create-fields select { width: 100%; padding: 7px; font: inherit; color: var(--ink-1); background: var(--plane); border: 1px solid var(--axis); border-radius: 4px; }
+.case-menu-body h3 { margin: 0; }
+.case-menu-body p { color: var(--ink-2); }
+.case-menu-body a { color: var(--ink-1); }
+.controls .case-menu > .case-menu-body, .case-toolbar .case-menu > .case-menu-body { left: 0; right: auto; margin-top: 6px; border-radius: 8px; }
+.case-menu > .case-menu-body { position: absolute; z-index: 25; top: 100%; right: 0; width: min(450px, 90vw); max-height: 75vh; overflow-y: auto; padding: 14px; background: var(--surface-1); border: 1px solid var(--axis); box-shadow: var(--shadow); }
+.case-menu-body ul { list-style: none; padding: 0; }
+.case-menu-body li { margin: 8px 0; }
+.case-menu button.case-menu-card { display: grid; gap: 6px; width: 100%; padding: 12px 14px; text-align: left; border-radius: 10px; background: var(--plane); line-height: 1.5; }
+.case-menu button.case-menu-card:hover { border-color: #7868bb; background: color-mix(in srgb, var(--plane) 94%, #7868bb); }
+.case-menu-card strong { font-size: 14px; }
+.case-menu-card span { color: var(--ink-2); font-size: 12px; }
+.case-document-actions { display: contents; }
+.case-document-actions > .case-actions { margin-left: auto; padding-left: 12px; border-left: 1px solid var(--grid); }
+.case-document-actions > p, .case-document-actions > .case-share-preview { flex-basis: 100%; min-width: 0; max-height: 45vh; overflow-y: auto; }
+.case-share-preview { border: 1px solid var(--axis); padding: 12px; margin-top: 12px; }
+.case-share-preview pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 200px; overflow-y: auto; }
+.case-shared-link { margin: 10px 0; }
+.case-shared-link label { display: block; }
+.case-shared-link input { display: block; width: 100%; padding: 6px; color: var(--ink-1); background: var(--plane); border: 1px solid var(--axis); }
+.case-error { color: var(--critical); padding: 8px; }
+
+/* Step panel. Captions never share the generated explanation's container. */
+/* Keep the scroll container flush at the top so the sticky premise covers it. */
+.case-panel { grid-area: panel; overflow-y: auto; padding: 0 16px 16px; border-left: 1px solid var(--grid); }
+.case-panel h2 { font-size: 19px; margin-top: 0; padding-top: 16px; }
+.case-panel h3 { font-size: 15px; }
+.case-panel h4 { font-size: 13px; margin-bottom: 5px; }
+.case-panel p { margin: 6px 0 12px; }
+.case-premise { position: sticky; top: 0; z-index: 2; background: var(--plane); border-block: 1px solid var(--axis); margin-bottom: 12px; max-height: 35vh; overflow-y: auto; }
+.case-authored { background: var(--case-note); border-left: 3px solid var(--axis); padding: 8px 12px; white-space: pre-wrap; }
+.case-narrative { margin-top: 14px; }
+.case-panel textarea { min-height: 80px; resize: vertical; font: inherit; }
+.case-narrative textarea { min-height: 120px; }
+.case-panel small { color: var(--ink-2); }
+.case-panel details { margin: 10px 0; }
+.case-prose { white-space: pre-wrap; }
+.shared-editor { margin: 12px 0; }
+.shared-editor label { display: block; margin: 8px 0; }
+.shared-editor textarea, .shared-editor input:not([type=checkbox]), .shared-editor select { display: block; width: 100%; padding: 8px; font: inherit; color: var(--ink-1); background: var(--plane); border: 1px solid var(--axis); }
+.shared-editor textarea { min-height: 90px; resize: vertical; }
+.case-evidence { border-top: 1px solid var(--grid); padding: 8px 0; }
+.case-claim-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.case-node-details { grid-area: panel; min-width: 0; overflow-y: auto; border-left: 1px solid var(--grid); background: var(--surface-1); }
+.case-node-details > aside { position: relative; inset: auto; width: auto; overflow: visible; border: 0; box-shadow: none; }
+.case-back { margin: 16px 18px 12px; }
+.case-node-choices { padding: 16px; }
+.case-node-choices > button { display: block; margin-bottom: 10px; }
+.case-concrete-detail { padding: 8px; border-left: 3px solid var(--axis); background: var(--case-note); }
+.case-gap { border: 1px dashed var(--axis); padding: 8px; }
+.case-assessment-note, .case-order-note { color: var(--ink-2); font-size: 12px; }
+.case-navigation { justify-content: space-between; margin: 14px 0; }
+.case-details { padding: 12px; max-height: 45vh; overflow: auto; }
+@media (max-width: 1000px) { .case-columns { --timeline-width: 180px; grid-template-columns: var(--timeline-width) minmax(180px, 1fr) 300px; } }
+@media (max-width: 700px) {
+  .case-columns { --timeline-width: 250px; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 300px auto; grid-template-areas: "playback" "canvas" "panel"; overflow-y: auto; }
+  .case-playback { position: sticky; top: 0; z-index: 3; flex-shrink: 0; }
+  .case-timeline { grid-column: 1; grid-row: 2; }
+  .case-columns > .canvas { grid-column: 1; grid-row: 2; }
+  .case-panel, .case-node-details { overflow: visible; }
+}

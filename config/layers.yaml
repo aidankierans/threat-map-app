@@ -1,0 +1,95 @@
+graphs:
+  event-tree:
+    label: Incident map
+    description: A map of the reported Hugging Face incident.
+    layers:
+      - component
+      - stage
+      - affordance
+      - failure-mode
+      - condition
+      - event
+layers:
+  component:
+    label: Component
+    role: spine
+    dir: content/components
+    hue: --s5
+    declares:
+      - parent
+  stage:
+    label: Stage
+    role: spine
+    dir: content/stages
+    hue: --s1
+    declares:
+      - enabled_by
+  affordance:
+    label: Affordance
+    role: spine
+    dir: content/affordances
+    hue: --s2
+    declares:
+      - enabled_by
+  failure-mode:
+    label: Failure mode
+    role: spine
+    dir: content/failure-modes
+    hue: --s3
+    declares:
+      - enabled_by
+  condition:
+    label: Condition
+    role: spine
+    dir: content/conditions
+    hue: --s6
+    declares:
+      - enabled_by
+  event:
+    label: Outcome event
+    role: spine
+    dir: content/events
+    hue: --s4
+    declares:
+      - enabled_by
+auxiliary:
+  condition-group:
+    label: Condition group
+    dir: content/condition-groups
+    declares:
+      - members
+  consequence:
+    label: Consequence class
+    dir: content/consequences
+    declares:
+      - members
+  act-class:
+    label: Act class
+    dir: content/act-classes
+    declares:
+      - members
+  question:
+    label: Research question
+    dir: content/questions
+    declares:
+      - addresses
+  page:
+    label: Page
+    dir: content/pages
+    declares: []
+gates:
+  affordance:
+    - stage
+    - component
+  failure-mode:
+    - affordance
+    - condition
+    - component
+  condition:
+    - stage
+    - failure-mode
+  event:
+    - condition
+  stage:
+    - condition
+    - component

@@ -1,0 +1,266 @@
+/* Dev-server editor chrome. Loaded only via the editor's dynamic import, so
+   none of this counts against the CSS footprint budget. Uses the app's theme
+   tokens, so it follows light/dark for free. */
+
+.edt-region {
+  position: relative;
+  border-radius: 4px;
+}
+
+.edt-region:not(.edt-editing):hover {
+  outline: 1px dashed var(--axis);
+  outline-offset: 4px;
+  cursor: text;
+}
+
+.edt-region:not(.edt-editing):hover::after {
+  content: "✎";
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.edt-text {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-1);
+  background: var(--plane);
+  border: 1px solid var(--axis);
+  border-radius: 4px;
+  padding: 8px 10px;
+  resize: none;
+  overflow: hidden;
+}
+
+.edt-text:focus {
+  outline: 2px solid var(--ring);
+}
+
+.edt-hint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* The save confirmation: appears in the hint row, holds, and fades out.
+   Purely CSS-timed, so no cleanup races the autosave debounce. */
+.edt-saved {
+  color: var(--ink-2);
+  animation: edt-saved-fade 2.4s ease forwards;
+}
+
+@keyframes edt-saved-fade {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.edt-strip {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--critical);
+}
+
+.edt-strip > div {
+  margin: 2px 0;
+}
+
+.edt-conflict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--warning);
+}
+
+/* The take-theirs undo line: quiet, passive, gone when the editor closes. */
+.edt-aside {
+  color: var(--warning);
+}
+
+.edt-diff {
+  margin-top: 6px;
+  max-height: 280px;
+  overflow: auto;
+  padding: 6px 8px;
+  background: var(--plane);
+  border: 1px solid var(--grid);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.edt-diff-legend {
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.edt-diff-same {
+  color: var(--ink-3);
+}
+
+.edt-diff-mine {
+  color: var(--good);
+}
+
+.edt-diff-theirs {
+  color: var(--critical);
+}
+
+.edt-btn {
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink-1);
+  background: var(--surface-1);
+  border: 1px solid var(--axis);
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.edt-btn:hover {
+  border-color: var(--ink-3);
+}
+
+.edt-form-toggle {
+  margin-bottom: 6px;
+}
+
+.edt-form {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 10px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: var(--plane);
+  border: 1px solid var(--grid);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.edt-form-row {
+  display: contents;
+}
+
+.edt-form-label {
+  color: var(--ink-2);
+  white-space: nowrap;
+  justify-self: end;
+}
+
+.edt-form input[type="text"],
+.edt-form input[type="number"],
+.edt-form select,
+.edt-form textarea {
+  font: inherit;
+  color: var(--ink-1);
+  background: var(--surface-1);
+  border: 1px solid var(--axis);
+  border-radius: 3px;
+  padding: 2px 6px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.edt-form-json textarea {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  width: 100%;
+  resize: vertical;
+}
+
+.edt-form .edt-strip,
+.edt-form .edt-btn {
+  grid-column: 2;
+  justify-self: start;
+}
+
+/* Relation tools: the add/remove/link rows the panel grows on the dev server. */
+.edt-reltools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  font-size: 11px;
+}
+
+.edt-reltools-label {
+  color: var(--ink-3);
+}
+
+.edt-reltools select {
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink-1);
+  background: var(--surface-1);
+  border: 1px solid var(--axis);
+  border-radius: 3px;
+  padding: 2px 4px;
+  max-width: 250px;
+}
+
+.edt-reltools .edt-strip {
+  flex-basis: 100%;
+  margin-top: 0;
+}
+
+.edt-picker {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 3px;
+  background: var(--surface-1);
+  border: 1px solid var(--axis);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.edt-picker li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.edt-picker li.sel,
+.edt-picker li:hover {
+  background: var(--plane);
+  outline: 1px solid var(--axis);
+}
+
+.edt-picker-value {
+  font-weight: 600;
+  color: var(--ink-1);
+  white-space: nowrap;
+}
+
+.edt-picker-detail {
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.edt-picker-kicker {
+  color: var(--ink-3);
+  font-size: 10px;
+  white-space: nowrap;
+}

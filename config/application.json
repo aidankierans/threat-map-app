@@ -1,0 +1,26 @@
+{
+  "title": "Threat map — Hugging Face incident",
+  "sourceBase": "",
+  "tutorialCase": "collective-intrusion",
+  "displayFamilies": [
+    {
+      "id": "display:affordance-incident",
+      "label": "Evaluation access",
+      "layer": "affordance",
+      "members": [
+        "AF-packages"
+      ]
+    },
+    {
+      "id": "display:condition-incident",
+      "label": "Incident conditions",
+      "layer": "condition",
+      "members": [
+        "CG-incident"
+      ]
+    }
+  ],
+  "bandOrder": [
+    "AC-incident"
+  ]
+}

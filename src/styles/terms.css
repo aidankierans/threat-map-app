@@ -1,0 +1,6 @@
+.term { display: inline; }
+.term button.term-trigger { display: inline; padding: 0 1px; min-width: 0; min-height: 0; border: 0; border-bottom: 1px dotted currentColor; border-radius: 0; background: transparent; color: inherit; font: inherit; line-height: inherit; cursor: help; text-align: inherit; }
+.term button.term-trigger:focus-visible { outline: 2px solid #f3bd57; outline-offset: 3px; }
+.term-definition { display: block; position: fixed; z-index: 10010; box-sizing: border-box; max-width: min(330px, calc(100vw - 16px)); padding: 12px 14px; border: 1px solid #8096b1; border-radius: 8px; background: #17273d; color: #f4f7fc; box-shadow: 0 6px 24px #0006; font: 14px/1.5 system-ui, sans-serif; text-transform: none; letter-spacing: normal; font-weight: normal; text-align: left; }
+.term-definition strong, .term-definition > span { display: block; }
+.term-definition strong { margin-bottom: 5px; }

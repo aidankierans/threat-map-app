@@ -1,0 +1,21 @@
+.welcome-splash { width: 82vw; height: 78dvh; max-width: 1100px; max-height: calc(100dvh - 32px); margin: auto; padding: clamp(24px, 5vw, 64px); box-sizing: border-box; overflow: auto; background: var(--plane); color: var(--ink-1); border: 1px solid var(--grid); border-radius: 16px; box-shadow: 0 24px 80px #0005; }
+.welcome-splash[open] { display: grid; place-items: center; }
+.welcome-splash::backdrop { background: #0005; }
+.welcome-card { width: 100%; max-width: 560px; line-height: 1.6; }
+.welcome-card h1 { font-size: clamp(24px, 5vw, 36px); line-height: 1.2; }
+.welcome-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+.welcome-actions .btn { min-height: 44px; padding: 10px 18px; }
+.welcome-hint { color: var(--ink-2); font-size: 14px; }
+.reference-fields { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; }
+.reference-fields dt { font-weight: 600; color: var(--ink-2); }
+.reference-fields dd { margin: 0; overflow-wrap: anywhere; }
+.shared-notice { padding: 6px 12px; flex: 0 0 auto; max-height: 20vh; overflow: auto; font-size: 12px; }
+.admin-console { position: absolute; inset: 0; z-index: 25; background: var(--plane); overflow: auto; max-width: none; }
+.admin-console pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  .welcome-splash { width: calc(100vw - 32px); height: 82dvh; }
+  header h1 { width: 100%; font-size: 14px; }
+  header .spacer { display: none; }
+  header .btn { min-height: 34px; }
+  header .case-menu > .case-menu-body, .case-toolbar .case-menu > .case-menu-body { position: fixed; inset: 100px 10px auto; width: auto; max-height: calc(100dvh - 120px); margin: 0; }
+}

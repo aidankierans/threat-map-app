@@ -1,0 +1,47 @@
+{
+    "name":  "@aidankierans/threat-map-app",
+    "version":  "0.1.0",
+    "private":  true,
+    "type":  "module",
+    "description":  "A configurable threat-map application with local editing and case studies.",
+    "scripts":  {
+                    "content":  "tsx src/build/cli.ts",
+                    "validate":  "tsx src/build/cli.ts --validate-only",
+                    "dev":  "npm run content \u0026\u0026 vite",
+                    "build":  "npm run content \u0026\u0026 vite build",
+                    "prepreview":  "npm run build",
+                    "preview":  "vite preview",
+                    "test":  "npm run content --silent -- --quiet \u0026\u0026 vitest run",
+                    "typecheck":  "npm run content --silent -- --quiet \u0026\u0026 tsc --noEmit",
+                    "footprint":  "tsx scripts/footprint.ts",
+                    "check":  "npm run validate \u0026\u0026 npm run typecheck \u0026\u0026 npm run test \u0026\u0026 npm run build \u0026\u0026 npm run footprint"
+                },
+    "dependencies":  {
+                         "preact":  "^10.29.8",
+                         "gray-matter":  "^4.0.3",
+                         "marked":  "^18.0.9",
+                         "yaml":  "^2.9.0",
+                         "zod":  "^4.4.3"
+                     },
+    "devDependencies":  {
+                            "@preact/preset-vite":  "^2.10.6",
+                            "@types/node":  "^26.2.0",
+                            "jsdom":  "^30.0.1",
+                            "tsx":  "^4.23.11",
+                            "typescript":  "~5.9.3",
+                            "vite":  "^8.2.1",
+                            "vitest":  "^4.1.10"
+                        },
+    "license":  "MIT",
+    "exports":  {
+                    "./*":  "./src/*"
+                },
+    "files":  [
+                  "src",
+                  "scripts",
+                  "LICENSE",
+                  "README.md",
+                  "docs",
+                  "RELEASE-STATUS.md"
+              ]
+}
