@@ -1,3 +1,4 @@
+import { portableIndex, portableProse } from "./portable-map.js";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import type { GraphIndex, ProseBundle } from "../types.js";
@@ -28,8 +29,10 @@ interface Props {
     onLeave: () => void;
     saved: boolean;
 }
-export function CaseWorkspace({ toolbarStart, actions, index, prose, reader, dispatch, step: requested, onStep: advance, onLeave, saved }: Props) {
+export function CaseWorkspace({ toolbarStart, actions, index: hostIndex, prose: hostProse, reader, dispatch, step: requested, onStep: advance, onLeave, saved }: Props) {
     const doc = useMemo(() => draftDocument(reader), [reader]);
+    const index = useMemo(() => doc.embeddedMap ? portableIndex(doc.embeddedMap, doc.map) : hostIndex, [doc.embeddedMap, doc.map, hostIndex]);
+    const prose = useMemo(() => doc.embeddedMap ? portableProse(doc.embeddedMap, index) : hostProse, [doc.embeddedMap, index, hostProse]);
     const graph = useMemo(() => buildGraph(index, doc.content.view.columns), [index, doc.content.view.columns]);
     const [editing, setEditing] = useState(false);
     const [limit, setLimit] = useState(true);
@@ -227,7 +230,7 @@ export function CaseWorkspace({ toolbarStart, actions, index, prose, reader, dis
             }
         }
     };
-    return <div class="case-workspace">
+    return <div class="case-workspace">{doc.embeddedMap && <p role="status">Portable case: using the included map data. Your main map is unchanged.</p>}
     <div class="case-toolbar">{toolbarStart}<button data-walkthrough="case-leave" onClick={onLeave}>Leave case study</button><button aria-pressed={editing} onClick={() => { setEditing(!editing); setPick(null); }}>{editing ? "Exit editing mode" : "Enter editing mode"}</button>
       <button aria-expanded={timelineVisible} aria-controls="case-timeline" onClick={() => setTimelineVisible(!timelineVisible)}>{timelineVisible ? "Hide timeline" : "Show timeline"}</button>
       {editing && <><button disabled={!reader.undo.length} onClick={() => dispatch({ type: "undo" })}>Undo</button><button disabled={!reader.redo.length} onClick={() => dispatch({ type: "redo" })}>Redo</button></>}

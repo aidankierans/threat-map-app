@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { portableMapSchema, portableIndex } from './portable-map.js';
 import type { GraphIndex } from "../types.js";
 import { scaleSatisfiers } from "../scale.js";
 import type { AnalysisDocument, RequirementRef, AnalysisStory, DeploymentContext, ReaderJudgment, StoryContraction } from "./reader-state.js";
@@ -42,7 +43,7 @@ const route = obj({ view: z.discriminatedUnion("kind", [obj({ kind: z.literal("t
     }),
 });
 export const caseSchema = obj({ kind: z.literal("threat-map/analysis"), schemaVersion: z.literal(1), identity, parent: identity.optional(), createdAt: text,
-    map, content: obj({ title: text, question: text.optional(), premise: text, interpretation: text, context, view: route,
+    embeddedMap: portableMapSchema.optional(), map, content: obj({ title: text, question: text.optional(), premise: text, interpretation: text, context, view: route,
         actors: list(obj({ id, label: text, kind: z.enum(["ai", "human", "population"]) })),
         request: obj({ waypoints: list(id), destinations: list(id), mode: z.enum(["all", "any"]) }),
         stories: list(story), archivedStories: list(obj({ story, map, context, judgments: list(judgment), contractions: list(contraction) })),
@@ -71,6 +72,7 @@ export function parseCase(input: string | unknown, index?: GraphIndex): Analysis
     if (new TextEncoder().encode(raw).length > MAX_CASE_BYTES)
         throw new Error("Case study exceeds the 1 MiB file limit.");
     const doc = caseSchema.parse(JSON.parse(raw)) as AnalysisDocument;
+    if (doc.embeddedMap) index = portableIndex(doc.embeddedMap, doc.map);
     delete (doc.content as unknown as {
         question?: string;
     }).question;
@@ -196,6 +198,10 @@ export function parseCase(input: string | unknown, index?: GraphIndex): Analysis
         for (const r of s.contractions)
             lookup({ story: r.story, occurrence: r.through });
     }
+    if (doc.embeddedMap && index) {
+        const issues = caseReview(doc, index);
+        if (issues.length) fail(issues.join('; '));
+    }
     return doc;
 }
 export function caseReview(doc: AnalysisDocument, index: GraphIndex): string[] {
@@ -213,15 +219,15 @@ export function caseReview(doc: AnalysisDocument, index: GraphIndex): string[] {
     for (const dep of doc.map.dependencies)
         if (index.mapBasis?.dependencies.find(d => d.key === dep.key)?.digest !== dep.digest)
             issues.push(`Changed map dependency: ${dep.label}`);
-    const knownSources = new Set(index.mapBasis?.dependencies.filter(d => d.key.startsWith("source:")).map(d => d.key.slice(7)) ?? []);
+    const knownSources = new Set(doc.embeddedMap ? Object.keys(doc.embeddedMap.references) : index.mapBasis?.dependencies.filter(d => d.key.startsWith("source:")).map(d => d.key.slice(7)) ?? []);
     const bases = [...doc.content.judgments, ...doc.content.context.mappings, ...doc.content.archivedStories.flatMap(a => [...a.judgments, ...a.context.mappings])];
     for (const basis of bases)
         for (const s of basis.sources)
             if (s.reference.kind === "citation" && !knownSources.has(s.reference.key))
                 issues.push(`Unresolved source: ${s.reference.key}`);
     for (const match of JSON.stringify(doc.content).matchAll(/\[@([^\]]+)\]/g))
-        if (!knownSources.has(match[1]))
-            issues.push(`Unresolved source: ${match[1]}`);
+        for (const key of match[1].split(';').map(s => s.trim().replace(/^@/, '')))
+            if (!knownSources.has(key)) issues.push(`Unresolved source: ${key}`);
     return [...new Set(issues)];
 }
 export function exportCase(doc: AnalysisDocument): string { return JSON.stringify(parseCase(doc), null, 2) + "\n"; }

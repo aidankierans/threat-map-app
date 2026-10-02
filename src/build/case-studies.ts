@@ -4,6 +4,7 @@ import { ROOT } from "./config.js";
 import { caseReview, parseCase, resolveRequirement } from "../app/case-codec.js";
 import type { GraphIndex } from "../types.js";
 import type { AnalysisDocument } from "../app/reader-state.js";
+import { portableIndex } from '../app/portable-map.js';
 export function loadCaseStudies(index: GraphIndex): {
     documents: AnalysisDocument[];
     errors: string[];
@@ -16,17 +17,18 @@ export function loadCaseStudies(index: GraphIndex): {
     for (const file of readdirSync(dir).filter(f => f.endsWith(".json")).sort()) {
         try {
             const doc = parseCase(readFileSync(resolve(dir, file), "utf8"), index);
-            const missingSources = caseReview(doc, index).filter(issue => issue.startsWith("Unresolved source:"));
+            const caseIndex=doc.embeddedMap?portableIndex(doc.embeddedMap,doc.map):index;
+            const missingSources = caseReview(doc, caseIndex).filter(issue => issue.startsWith("Unresolved source:"));
             if (missingSources.length)
                 throw new Error(missingSources.join("; "));
             for (const id of [...doc.content.request.waypoints, ...doc.content.request.destinations])
-                if (!index.nodes.some(n => n.id === id))
+                if (!caseIndex.nodes.some(n => n.id === id))
                     throw new Error(`Unresolved generation request ${id}`);
             for (const s of [...doc.content.stories, ...doc.content.archivedStories.map(a => a.story)])
                 for (const o of s.occurrences) {
-                    if (!index.nodes.some(n => n.id === o.node))
+                    if (!caseIndex.nodes.some(n => n.id === o.node))
                         throw new Error(`Unresolved node ${o.node}`);
-                    if (o.argument.kind === "requirement" && resolveRequirement(index, o.argument.ref).status !== "resolved")
+                    if (o.argument.kind === "requirement" && resolveRequirement(caseIndex, o.argument.ref).status !== "resolved")
                         throw new Error(`Unresolved requirement ${o.node}`);
                 }
             if (documents.some(d => d.identity.revisionId === doc.identity.revisionId))

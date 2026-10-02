@@ -264,3 +264,24 @@
   font-size: 10px;
   white-space: nowrap;
 }
+
+.local-dataset-panel {
+  display: block;
+  position: fixed;
+  z-index: 80;
+  top: 5rem;
+  right: 1rem;
+  width: min(44rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 6rem);
+  overflow: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  background: var(--plane);
+  color: var(--ink-1);
+  box-shadow: 0 12px 40px #0003;
+  text-align: left;
+}
+.local-dataset-panel form > label { display: block; margin: .7rem 0; }
+.local-dataset-panel input:not([type=checkbox]), .local-dataset-panel textarea { display: block; width: 100%; }
+.local-dataset-panel p { white-space: normal; }

@@ -736,6 +736,7 @@ export function App() {
         <button class="btn" onClick={startWalkthrough}>Tutorial</button>
         {(shared.editable || mapCatalog?.editable) && <button class="btn" onClick={() => setChangeLogOpen(open => !open)}>Change log</button>}
         {mapCatalog?.editable && route.view.kind === "tree" && <button class="btn" onClick={() => setMapEditId(selection.find(id => graph.byId.has(id)) ?? index.nodes.find(n => n.layer === "affordance")!.id)}>Edit map</button>}
+        {devtools?.DatasetTools&&route.view.kind==='tree'&&<devtools.DatasetTools onOpen={openDocument}/>}
         <button class="btn" data-walkthrough="theme-toggle" onClick={toggleTheme}>
           {theme === "dark" ? "Light mode" : "Dark mode"}
         </button>
@@ -772,7 +773,7 @@ export function App() {
         {mapRestoreId && <section class="doc admin-console"><MapRestoreReview revisionId={mapRestoreId} onPublished={setMapCatalog} onClose={() => setMapRestoreId(null)}/></section>}
         {caseError && <div class="case-error" role="alert">{caseError}<button onClick={leaveCase}>Return to map</button></div>}
         {isCase && (!reader || caseLoading) && !caseError && <p role="status">Loading case study…</p>}
-        {isCase && reader && !caseLoading && !caseError && <CaseWorkspace toolbarStart={caseMenu} actions={<CaseActions reader={reader} dispatch={dispatchCase} showPreview={casePreview} onShare={() => setCasePreview(true)} onPreviewClose={() => setCasePreview(false)} onSaved={doc => setRoute(r => {
+        {isCase && reader && !caseLoading && !caseError && <CaseWorkspace toolbarStart={caseMenu} actions={<CaseActions localCases={devtools?.localCases} index={index} prose={prose} reader={reader} dispatch={dispatchCase} showPreview={casePreview} onShare={() => setCasePreview(true)} onPreviewClose={() => setCasePreview(false)} onSaved={doc => setRoute(r => {
                     if (r.view.kind !== "case")
                         return r;
                     const next: RouteState = { ...r, view: { kind: "case", id: doc.identity.revisionId, step: r.view.step } };

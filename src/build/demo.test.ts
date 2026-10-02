@@ -8,8 +8,8 @@ it('builds a standalone case with resolved nodes and sources', () => {
  expect(result.errors).toEqual([]);
  expect(result.index.nodes).toHaveLength(14);
  expect(Object.keys(result.references)).toEqual(['metr-huggingface-investigation']);
- expect(result.index.caseStudies).toHaveLength(1);
- const doc=parseCase(result.index.caseStudies![0],result.index);
+ expect(result.index.caseStudies!.some(d=>d.identity.analysisId==='collective-intrusion')).toBe(true);
+ const doc=parseCase(result.index.caseStudies!.find(d=>d.identity.analysisId==='collective-intrusion'),result.index);
  expect(caseReview(doc,result.index)).toEqual([]);
  expect(doc.content.stories[0].occurrences.some(o=>o.node==='FM-networkpivot')).toBe(true);
  expect(buildGraph(result.index).byId.has('E-collectiveattack')).toBe(true);

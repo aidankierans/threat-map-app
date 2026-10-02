@@ -172,6 +172,7 @@ export interface RevisionRef {
     revisionId: string;
 }
 export interface AnalysisDocument {
+    embeddedMap?: import('./portable-map.js').PortableMap;
     kind: "threat-map/analysis";
     schemaVersion: 1;
     identity: RevisionRef;
@@ -184,6 +185,7 @@ export interface ReaderState {
     baseline: AnalysisDocument | null;
     savePolicy: "new" | "fork" | "continue";
     draft: {
+        embeddedMap?: import('./portable-map.js').PortableMap;
         map: MapBasis;
         content: AnalysisContent;
     };

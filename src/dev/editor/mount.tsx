@@ -4,6 +4,7 @@ import { BodyEditor } from "./BodyEditor.js";
 import { EdgeRemover, QuestionLinker, RelationAdder } from "./RelationTools.js";
 import type { EditorContext } from "./api.js";
 import "./editor.css";
+import { DatasetTools, localRequest } from './DatasetTools.js';
 export function create({ token, index }: {
     token: string;
     index: GraphIndex;
@@ -27,6 +28,11 @@ export function create({ token, index }: {
         }
     });
     return {
+        localCases: {
+            save:async doc=>(await localRequest(ctx,'case',doc)).source,
+            draft:async doc=>(await localRequest(ctx,'case-draft',doc)).source,
+        },
+        DatasetTools:props=><DatasetTools {...props} ctx={ctx}/>,
         prose: (site) => <BodyEditor site={site} ctx={ctx}/>,
         RelationAdder: (props) => <RelationAdder {...props} ctx={ctx}/>,
         EdgeRemover: (props) => <EdgeRemover {...props} ctx={ctx}/>,

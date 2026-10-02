@@ -71,7 +71,7 @@ export type CaseAction = {
     interpretation?: string;
 };
 export function openCase(doc: AnalysisDocument, local = false): ReaderState {
-    return { baseline: structuredClone(doc), savePolicy: local ? "continue" : "fork", draft: { map: structuredClone(doc.map), content: structuredClone(doc.content) }, undo: [], redo: [], ui: { activeStory: doc.content.stories[0]?.id ?? null, activeOccurrence: null, expandedContractions: [] } };
+    return { baseline: structuredClone(doc), savePolicy: local ? "continue" : "fork", draft: { map: structuredClone(doc.map), content: structuredClone(doc.content), ...(doc.embeddedMap ? { embeddedMap: structuredClone(doc.embeddedMap) } : {}) }, undo: [], redo: [], ui: { activeStory: doc.content.stories[0]?.id ?? null, activeOccurrence: null, expandedContractions: [] } };
 }
 export function draftDocument(state: ReaderState): AnalysisDocument {
     return { kind: "threat-map/analysis", schemaVersion: 1, identity: state.baseline?.identity ?? { analysisId: "draft", revisionId: "draft" }, createdAt: state.baseline?.createdAt ?? new Date().toISOString(), ...state.draft };
