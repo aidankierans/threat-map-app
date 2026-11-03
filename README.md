@@ -30,8 +30,7 @@ See [hosting integration](docs/HOSTING.md) for connecting your own services
 and [data format](docs/DATA.md) for authoring a dataset.
 
 Code is under MIT. Cited third-party source materials retain their own rights;
-they are linked, not relicensed. See [release status](RELEASE-STATUS.md): this
-repository remains private pending ownership/licensing confirmation.
+they are linked, not relicensed.
 
 ## Share a case without the original site
 

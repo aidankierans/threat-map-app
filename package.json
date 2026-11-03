@@ -42,7 +42,6 @@
         "scripts",
         "LICENSE",
         "README.md",
-        "docs",
-        "RELEASE-STATUS.md"
+        "docs"
     ]
 }
