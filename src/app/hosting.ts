@@ -13,6 +13,8 @@ export interface HostingAdapter {
         sharing: boolean;
         feedback: boolean;
         history: boolean;
+        /** Readers can edit a copy of the map kept in their own browser. */
+        localMap?: boolean;
     };
 }
 const local: HostingAdapter = {

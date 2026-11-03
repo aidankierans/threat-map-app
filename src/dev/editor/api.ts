@@ -1,7 +1,13 @@
 import type { GraphIndex } from "../../types.js";
+/** Sends one editor request: to the dev server's file editor, or to the browser's local map. */
+export type EditorRequest = (method: "GET" | "PUT" | "POST" | "DELETE", path: string, body?: unknown, options?: {
+    keepalive?: boolean;
+}) => Promise<Response>;
 export interface EditorContext {
-    token: string;
+    request: EditorRequest;
     index: GraphIndex;
+    /** True when edits are kept in this browser instead of written to files. */
+    local?: boolean;
     registry: Set<() => void>;
     completions?: Completions;
 }
@@ -35,15 +41,16 @@ export interface Conflict {
     currentHash: string;
     currentBody: string;
 }
-const base = () => `${import.meta.env.BASE_URL}__editor`;
-const headers = (ctx: EditorContext) => ({
-    "x-editor-token": ctx.token,
-    "content-type": "application/json",
-});
-export async function getDoc(ctx: EditorContext, id: string): Promise<DocPayload> {
-    const res = await fetch(`${base()}/doc?id=${encodeURIComponent(id)}`, {
-        headers: headers(ctx),
+export function serverRequest(token: string): EditorRequest {
+    return (method, path, body, options = {}) => fetch(`${import.meta.env.BASE_URL}__editor/${path}`, {
+        method,
+        headers: { "x-editor-token": token, "content-type": "application/json" },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        keepalive: options.keepalive ?? false,
     });
+}
+export async function getDoc(ctx: EditorContext, id: string): Promise<DocPayload> {
+    const res = await ctx.request("GET", `doc?id=${encodeURIComponent(id)}`);
     if (!res.ok)
         throw new Error(`GET doc ${id}: HTTP ${res.status}`);
     return res.json();
@@ -57,12 +64,7 @@ export async function putDoc(ctx: EditorContext, payload: {
 }, options: {
     keepalive?: boolean;
 } = {}): Promise<SaveResult | Conflict> {
-    const res = await fetch(`${base()}/doc`, {
-        method: "PUT",
-        headers: headers(ctx),
-        body: JSON.stringify(payload),
-        keepalive: options.keepalive ?? false,
-    });
+    const res = await ctx.request("PUT", "doc", payload, options);
     if (res.status === 409) {
         const data = await res.json();
         return { conflict: true, currentHash: data.currentHash, currentBody: data.currentBody };
@@ -72,11 +74,7 @@ export async function putDoc(ctx: EditorContext, payload: {
     return res.json();
 }
 export async function putDraft(ctx: EditorContext, id: string, body: string): Promise<void> {
-    const res = await fetch(`${base()}/draft`, {
-        method: "PUT",
-        headers: headers(ctx),
-        body: JSON.stringify({ id, body }),
-    });
+    const res = await ctx.request("PUT", "draft", { id, body });
     if (!res.ok)
         throw new Error(`draft ${id}: HTTP ${res.status}`);
 }
@@ -94,26 +92,19 @@ export interface Completions {
 export async function getCompletions(ctx: EditorContext): Promise<Completions> {
     if (ctx.completions)
         return ctx.completions;
-    const res = await fetch(`${base()}/complete`, { headers: headers(ctx) });
+    const res = await ctx.request("GET", "complete");
     if (!res.ok)
         throw new Error(`completions: HTTP ${res.status}`);
     ctx.completions = (await res.json()) as Completions;
     return ctx.completions;
 }
 export async function putDiscarded(ctx: EditorContext, id: string): Promise<void> {
-    const res = await fetch(`${base()}/draft`, {
-        method: "PUT",
-        headers: headers(ctx),
-        body: JSON.stringify({ id, slot: "discarded" }),
-    });
+    const res = await ctx.request("PUT", "draft", { id, slot: "discarded" });
     if (!res.ok)
         throw new Error(`set aside ${id}: HTTP ${res.status}`);
 }
 export async function deleteDraft(ctx: EditorContext, id: string): Promise<void> {
-    const res = await fetch(`${base()}/draft?id=${encodeURIComponent(id)}`, {
-        method: "DELETE",
-        headers: headers(ctx),
-    });
+    const res = await ctx.request("DELETE", `draft?id=${encodeURIComponent(id)}`);
     if (!res.ok)
         throw new Error(`discard draft ${id}: HTTP ${res.status}`);
 }

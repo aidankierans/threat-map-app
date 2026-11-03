@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import type { AnalysisDocument } from '../../app/reader-state.js';
 import type { EditorContext } from './api.js';
 export async function localRequest(ctx: EditorContext, path: string, body?: unknown) {
-    const response = await fetch(`${import.meta.env.BASE_URL}__editor/${path}`, { method: body === undefined ? 'GET' : 'POST', headers: { 'x-editor-token': ctx.token, 'content-type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+    const response = await ctx.request(body === undefined ? 'GET' : 'POST', path, body);
     const result = await response.json();
     if (!response.ok)
         throw Error(result.error ?? 'Local file operation failed.');
@@ -53,7 +53,7 @@ export function DatasetTools({ ctx, onOpen }: {
         }
         try {
             const result = await localRequest(ctx, 'create', { meta, body, ...(groups.length ? { group } : {}) });
-            setError(`Created ${result.sources.join(', ')}`);
+            setError(ctx.local ? `Added ${label} to your local map.` : `Created ${result.sources.join(', ')}`);
             setMode(null);
         }
         catch (e) {
@@ -64,11 +64,11 @@ export function DatasetTools({ ctx, onOpen }: {
         }
     };
     return <section class="local-dataset-tools">
-   <button class="btn" onClick={() => open('node')}>Add node</button> <button class="btn" onClick={() => open('group')}>Add group</button> <button class="btn" onClick={() => open('drafts')}>Recover local case draft</button>
+   <button class="btn" data-walkthrough="map-add-node" onClick={() => open('node')}>Add node</button> <button class="btn" onClick={() => open('group')}>Add group</button>{!ctx.local && <> <button class="btn" onClick={() => open('drafts')}>Recover local case draft</button></>}
    {error && !mode && <p role="status" style={{ whiteSpace: 'pre-wrap' }}>{error}</p>}
    {mode && <div class="edt-form local-dataset-panel" role="region" aria-label="Local dataset editor"><button onClick={() => setMode(null)}>Close</button>{error && <p role="alert" style={{ whiteSpace: 'pre-wrap' }}>{error}</p>}
    {mode === 'drafts' ? <><h3>Case recovery files on this computer</h3><p>Saved revisions are listed in Case studies. These are the latest working drafts from disk.</p>{drafts.length ? drafts.map(d => <p key={d.identity.analysisId}><button onClick={() => { onOpen(d); setMode(null); }}>{d.content.title}</button></p>) : <p>No local recovery files yet.</p>}</> : <form onSubmit={create}>
-     <h3>{isGroup ? 'Add a group' : 'Add a node'}</h3><p>Creates Markdown in this dataset's content folder. Existing files are validated before the change is applied.</p>
+     <h3>{isGroup ? 'Add a group' : 'Add a node'}</h3><p>{ctx.local ? "Adds to your local copy of the map in this browser. The whole map is checked before the change is applied." : "Creates Markdown in this dataset's content folder. Existing files are validated before the change is applied."}</p>
      <label>Type <select value={layer} onChange={e => { setLayer(e.currentTarget.value); setSelected([]); setGroup(''); setId(''); }}>{Object.keys(prefixes).filter(k => isGroup ? !!groupMember[k] : !groupMember[k]).filter(k => options?.layers[k]).map(k => <option value={k}>{options!.layers[k].label}</option>)}</select></label>
      <label>Label <input required value={label} onInput={e => { setLabel(e.currentTarget.value); if (!id || id === `${prefixes[layer]}-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`)
                 setId(`${prefixes[layer]}-${e.currentTarget.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`); }}/></label>

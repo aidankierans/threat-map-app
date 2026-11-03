@@ -14,8 +14,26 @@ backup. Saved map views are stored in your browser.
 Export case files to back them up or share them. `npm run build` creates a
 static site in `dist`; `npm run preview` builds and serves that site.
 
-Run `npm run check` before committing. The local editor is restricted to
-loopback requests and is excluded from production builds.
+Run `npm run check` before committing. The file-writing editor is restricted
+to loopback requests and is excluded from production builds.
+
+## Edit a copy of the map in the browser
+
+A host can set the `localMap` capability (see [hosting](docs/HOSTING.md)) to
+give readers an **Edit map** button. They can then edit nodes, add nodes and
+groups, and change prerequisites using the same tools as the local editor.
+Edits are kept as a map file (a JSON manifest of the map's node documents and
+sources) in that browser's storage and are never sent to the host. **Export map
+file** and **Import map file** move a copy between browsers or people, and
+**Reset to original map** discards it.
+
+Map files are untrusted input wherever they come from. Only node, group and
+edge documents are accepted, with the fields their type defines. Sources must
+use http or https links, and the whole map is validated before a change is
+kept. Edited descriptions are rendered in safe mode: raw HTML is shown as text,
+and links are kept only if they point to the web or to the map. Pages, widgets
+and layer configuration always come from the deployed site. When the map has
+local edits, a shared case includes the nodes it uses as plain text.
 
 ## Customize
 

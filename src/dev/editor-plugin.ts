@@ -4,8 +4,8 @@ import { randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin, ViteDevServer } from "vite";
 import matter from "gray-matter";
-import { z } from "zod";
 import { ROOT, layersConfig } from "../build/config.js";
+import { defaultsFor, formSchemaFor } from "./editor/form-schema.js";
 import { applyCreation, planCreation, saveLocalCase, localPath } from './local-data.js';
 import { parseCase } from '../app/case-codec.js';
 import { runBuild, type BuildResult } from "../build/run.js";
@@ -31,26 +31,7 @@ export function stripLeads(index: GraphIndex): string {
 export function classifyRebuild(prev: GraphIndex, next: GraphIndex): "prose" | "reload" {
     return stripLeads(prev) === stripLeads(next) ? "prose" : "reload";
 }
-const formSchemas = new Map<LayerName, Record<string, unknown>>();
-export function formSchemaFor(layer: LayerName): Record<string, unknown> {
-    let cached = formSchemas.get(layer);
-    if (!cached) {
-        cached = z.toJSONSchema(SCHEMAS[layer], { io: "input" }) as Record<string, unknown>;
-        formSchemas.set(layer, cached);
-    }
-    return cached;
-}
-function defaultsFor(layer: LayerName): Record<string, unknown> {
-    const props = (formSchemaFor(layer).properties ?? {}) as Record<string, {
-        default?: unknown;
-    }>;
-    const defaults: Record<string, unknown> = {};
-    for (const [key, spec] of Object.entries(props)) {
-        if (spec && typeof spec === "object" && "default" in spec)
-            defaults[key] = spec.default;
-    }
-    return defaults;
-}
+export { formSchemaFor };
 interface SaveRequest {
     id: string;
     baseHash: string;

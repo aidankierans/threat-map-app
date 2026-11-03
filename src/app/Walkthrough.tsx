@@ -8,6 +8,11 @@ export interface WalkthroughProps {
     open: boolean;
     onExit: (completed: boolean) => void;
     onOpenMap: (phase: "entry" | "map") => void | Promise<void>;
+    /** Records the app's state when a step begins; Back restores it, undoing that step's actions. */
+    capture?: () => unknown;
+    restore?: (state: unknown) => void;
+    /** Adds the steps for editing a local copy of the map. */
+    mapEditing?: boolean;
 }
 interface Step {
     chapter: "entry" | "case" | "map";
@@ -17,7 +22,7 @@ interface Step {
     action?: string;
     required?: boolean;
 }
-const steps: Step[] = [
+const BASE_STEPS: Step[] = [
     { chapter: "entry", target: "case-menu", title: "Open the case-study menu", body: "Case studies are available from this button on both the map and the case-study screen. Open the menu to choose an example.", action: "Select Case studies.", required: true },
     { chapter: "entry", target: `case-example-${profile.tutorialCase}`, title: "Choose the introductory example", body: "Choose the introductory example to follow a short sequence from an evaluation task to an external consequence. Your previous view and draft will be restored when you exit.", action: "Select the highlighted case study.", required: true },
     { chapter: "case", target: "case-timeline", title: "Start with one case study", body: "This example follows a sequence through the map. Read its steps in order using the timeline." },
@@ -34,6 +39,11 @@ const steps: Step[] = [
     { chapter: "map", target: "map-search", title: "Find a topic", body: "Search highlights matching nodes. Select a match to inspect its connections. Clear the search when you want to explore the whole visible map again.", action: "Try a word from a node label." },
     { chapter: "map", target: "map-story", title: "Trace a possible path", body: "After this walkthrough, select a starting point and an outcome, then use these controls to trace a connection through the map's prerequisites." },
     { chapter: "map", target: "map-share", title: "Copy a link to your view", body: "Copy link creates a URL for the current selection, filters and column arrangement. Send that URL to let someone open the same map view." },
+];
+const EDITOR_STEPS: Step[] = [
+    { chapter: "map", target: "map-edit", title: "Edit your own copy of the map", body: "Edit map lets you change node descriptions, add nodes and groups, and adjust prerequisites. Your changes are saved only in this browser and are not sent to the site.", action: "Select Edit map.", required: true },
+    { chapter: "map", target: "map-add-node", title: "Add nodes and groups", body: "Add node and Add group open short forms for new entries. To change an existing node, open its details and use the editor there. Each change is checked against the whole map, and a change that would break it is explained instead of saved." },
+    { chapter: "map", target: "local-map-bar", title: "Keep or share your edits", body: "Export map file saves your copy as a file you can keep or send to someone, who can load it with Import map file. Reset to original map discards your edits. A case study shared from an edited map includes the nodes it uses. Exiting this tutorial turns editing off without changing the map." },
 ];
 interface Box {
     left: number;
@@ -62,7 +72,8 @@ const clamp = (n: number, low: number, high: number) => Math.max(low, Math.min(n
 export function Walkthrough(props: WalkthroughProps) {
     return props.open ? <ActiveWalkthrough {...props}/> : null;
 }
-function ActiveWalkthrough({ onExit, onOpenMap }: WalkthroughProps) {
+function ActiveWalkthrough({ onExit, onOpenMap, capture, restore, mapEditing = false }: WalkthroughProps) {
+    const [steps] = useState(() => mapEditing ? [...BASE_STEPS, ...EDITOR_STEPS] : BASE_STEPS);
     const [started, setStarted] = useState(false);
     const [index, setIndex] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -74,8 +85,12 @@ function ActiveWalkthrough({ onExit, onOpenMap }: WalkthroughProps) {
     const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
     const [cardHeight, setCardHeight] = useState(310);
     const card = useRef<HTMLDivElement>(null);
-    const callbacks = useRef({ onExit, onOpenMap });
-    callbacks.current = { onExit, onOpenMap };
+    const callbacks = useRef({ onExit, onOpenMap, capture, restore });
+    callbacks.current = { onExit, onOpenMap, capture, restore };
+    const snapshots = useRef<unknown[]>([]);
+    const returning = useRef(false);
+    // A step's starting state is recorded once its control is on screen, so loading has finished.
+    const arrival = useRef({ index: -1, recorded: false });
     const step = steps[index];
     const exit = (completed: boolean) => {
         dismissWalkthroughInvitation(completed);
@@ -170,7 +185,20 @@ function ActiveWalkthrough({ onExit, onOpenMap }: WalkthroughProps) {
     useLayoutEffect(() => {
         setActed(false);
         card.current?.focus();
+        // Returning to a step restores its recorded state, which must not be overwritten.
+        arrival.current = { index, recorded: returning.current };
+        returning.current = false;
     }, [index, started]);
+    const back = () => {
+        let previous = index - 1;
+        while (previous > 0 && snapshots.current[previous] === undefined)
+            previous--;
+        const saved = snapshots.current[previous];
+        if (saved !== undefined)
+            callbacks.current.restore?.(saved);
+        returning.current = saved !== undefined;
+        setIndex(previous);
+    };
     useEffect(() => {
         if (!started || loading) {
             setBox(null);
@@ -186,6 +214,10 @@ function ActiveWalkthrough({ onExit, onOpenMap }: WalkthroughProps) {
                 highlighted = target;
                 if (target && step.target !== "map-canvas")
                     target.scrollIntoView?.({ block: "nearest", inline: "nearest", behavior: "instant" });
+            }
+            if (target && arrival.current.index === index && !arrival.current.recorded) {
+                arrival.current.recorded = true;
+                snapshots.current[index] = callbacks.current.capture?.();
             }
             const rect = target?.getBoundingClientRect();
             const next = rect ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : null;
@@ -260,7 +292,7 @@ function ActiveWalkthrough({ onExit, onOpenMap }: WalkthroughProps) {
       </div>}
       <label class="walkthrough-dimming"><input type="checkbox" checked={dim} onChange={e => setDim(e.currentTarget.checked)}/> Dim the background</label>
       <div class="walkthrough-buttons">
-        {started ? <><button disabled={index === 0 || loading} onClick={() => setIndex(n => n - 1)}>Back</button><button disabled={loading || !!step.required} onClick={() => index === steps.length - 1 ? exit(true) : setIndex(n => n + 1)}>{index === steps.length - 1 ? "Finish" : "Next"}</button></> : <button onClick={() => { dismissWalkthroughInvitation(); setStarted(true); }}>Start guided example</button>}
+        {started ? <><button disabled={index === 0 || loading} onClick={back}>Back</button><button disabled={loading || !!step.required} onClick={() => index === steps.length - 1 ? exit(true) : setIndex(n => n + 1)}>{index === steps.length - 1 ? "Finish" : "Next"}</button></> : <button onClick={() => { dismissWalkthroughInvitation(); setStarted(true); }}>Start guided example</button>}
       </div>
       {started && step.chapter === "case" && <button class="walkthrough-skip" disabled={loading} onClick={() => setIndex(steps.findIndex(item => item.chapter === "map"))}>Skip to map tools</button>}
     </div>

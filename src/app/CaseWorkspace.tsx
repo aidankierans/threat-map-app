@@ -28,8 +28,17 @@ interface Props {
     onStep: (n: number) => void;
     onLeave: () => void;
     saved: boolean;
+    /** View state to start from, so the tutorial's Back button can return to an earlier step exactly. */
+    ui?: CaseUi | null;
+    onUi?: (ui: CaseUi | null) => void;
 }
-export function CaseWorkspace({ toolbarStart, actions, index: hostIndex, prose: hostProse, reader, dispatch, step: requested, onStep: advance, onLeave, saved }: Props) {
+export interface CaseUi {
+    focus: boolean;
+    detail: string | null;
+    choices: string[];
+    timeline: boolean;
+}
+export function CaseWorkspace({ toolbarStart, actions, index: hostIndex, prose: hostProse, reader, dispatch, step: requested, onStep: advance, onLeave, saved, ui, onUi }: Props) {
     const doc = useMemo(() => draftDocument(reader), [reader]);
     const index = useMemo(() => doc.embeddedMap ? portableIndex(doc.embeddedMap, doc.map) : hostIndex, [doc.embeddedMap, doc.map, hostIndex]);
     const prose = useMemo(() => doc.embeddedMap ? portableProse(doc.embeddedMap, index) : hostProse, [doc.embeddedMap, index, hostProse]);
@@ -37,9 +46,9 @@ export function CaseWorkspace({ toolbarStart, actions, index: hostIndex, prose: 
     const [editing, setEditing] = useState(false);
     const [limit, setLimit] = useState(true);
     const [actorsVisible, setActorsVisible] = useState(false);
-    const [timelineVisible, setTimelineVisible] = useState(true);
-    const [detail, setDetail] = useState<string | null>(null);
-    const [detailChoices, setDetailChoices] = useState<string[]>([]);
+    const [timelineVisible, setTimelineVisible] = useState(ui?.timeline ?? true);
+    const [detail, setDetail] = useState<string | null>(ui?.detail ?? null);
+    const [detailChoices, setDetailChoices] = useState<string[]>(ui?.choices ?? []);
     const columns = useRef<HTMLDivElement>(null);
     const returnPosition = useRef<{
         panel: number;
@@ -93,7 +102,9 @@ export function CaseWorkspace({ toolbarStart, actions, index: hostIndex, prose: 
         ids: string[];
         sequence: number;
     } | null>(null);
-    const [focusCurrentStep, setFocusCurrentStep] = useState(false);
+    const [focusCurrentStep, setFocusCurrentStep] = useState(ui?.focus ?? false);
+    useLayoutEffect(() => onUi?.({ focus: focusCurrentStep, detail, choices: detailChoices, timeline: timelineVisible }), [focusCurrentStep, detail, detailChoices, timelineVisible]);
+    useLayoutEffect(() => () => onUi?.(null), []);
     const step = Math.max(0, Math.min(doc.content.presentation.steps.length - 1, requested));
     const [playing, setPlaying] = useState(false);
     const lastStep = doc.content.presentation.steps.length - 1;

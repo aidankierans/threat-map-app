@@ -31,6 +31,22 @@ import { TipLayer } from "./Tip.js";
 import type { DevTools } from "./devtools.js";
 import { THEME_KEY } from "./config.js";
 import { shouldInviteWalkthrough, dismissWalkthroughInvitation, WALKTHROUGH_REQUEST_EVENT } from "./walkthrough-state.js";
+import { hosting } from "./hosting.js";
+import { hasLocalMap } from "./local-map-key.js";
+import type { LocalMapState, LocalMapStore } from "./local-map-store.js";
+import type { CaseUi } from "./CaseWorkspace.js";
+interface TutorialState {
+    route: RouteState;
+    reader: ReaderState | null;
+    filters: boolean;
+    panel: boolean;
+    preview: boolean;
+    fold: string[];
+    anchor: string | null;
+    caseUi: CaseUi | null;
+    editing: boolean;
+    menu: boolean;
+}
 const CaseWorkspace = lazyFeature(async () => ({ default: (await import("./CaseWorkspace.js")).CaseWorkspace }), "case study");
 const CaseActions = lazyFeature(async () => ({ default: (await import("./CaseActions.js")).CaseActions }), "case actions");
 const PageView = lazyFeature(async () => ({ default: (await import("./DocViews.js")).PageView }), "page");
@@ -38,6 +54,7 @@ const BibliographyView = lazyFeature(async () => ({ default: (await import("./Bi
 const Walkthrough = lazyFeature(async () => ({ default: (await import("./Walkthrough.js")).Walkthrough }), "tutorial");
 const ChangeLog = lazyFeature(async () => ({ default: (await import("./ChangeLog.js")).ChangeLog }), "change log");
 const SharedMapEditor = lazyFeature(async () => ({ default: (await import("./SharedMapEditor.js")).SharedMapEditor }), "map editor");
+const LocalMapBar = lazyFeature(async () => ({ default: (await import("./LocalMapBar.js")).LocalMapBar }), "local map tools");
 const MapRestoreReview = lazyFeature(async () => ({ default: (await import("./SharedMapEditor.js")).MapRestoreReview }), "map restore");
 const baseIndex = rawIndex as unknown as GraphIndex;
 const NARROW = "(max-width: 700px)";
@@ -72,11 +89,36 @@ export function App() {
         if (revision.resource.startsWith("bibliography/"))
             void loadSharedMap().then(setMapCatalog).catch(() => setMapError("The source was saved, but the map’s source review state could not be refreshed. Reload to check it."));
     };
+    const localCapable = hosting().capabilities.localMap === true;
+    const [localStore, setLocalStore] = useState<LocalMapStore | null>(null);
+    const [localState, setLocalState] = useState<LocalMapState | null>(null);
+    const [localEditing, setLocalEditing] = useState(false);
+    const [localError, setLocalError] = useState("");
+    const openLocalStore = async () => {
+        if (localStore)
+            return localStore;
+        const { openLocalMap } = await import("./local-map-store.js");
+        const store = await openLocalMap();
+        store.subscribe(setLocalState);
+        setLocalStore(store);
+        setLocalState(store.state);
+        return store;
+    };
+    useEffect(() => { if (localCapable && hasLocalMap())
+        openLocalStore().catch(error => setLocalError(`Your local map edits could not be loaded. ${String(error)}`)); }, []);
+    const toggleLocalEditing = () => {
+        if (localEditing)
+            return setLocalEditing(false);
+        setLocalError("");
+        openLocalStore().then(() => setLocalEditing(true)).catch(error => setLocalError(`Editing could not start. ${String(error)}`));
+    };
+    // A local copy replaces the bundled map only once it has edits, or while it is being edited.
+    const displayedMap = localState && (localState.changed || localEditing) ? localState : mapCatalog;
     const [caseData, setCaseData] = useState<Pick<GraphIndex, "caseStudies" | "mapBasis" | "sourceKeys"> | null>(null);
-    const index = useMemo(() => ({ ...(mapCatalog?.index ?? baseIndex), ...(mapCatalog?.index ? { caseStudies: caseData?.caseStudies } : caseData), questions: (mapCatalog?.index ?? baseIndex).questions.map(q => {
+    const index = useMemo(() => ({ ...(displayedMap?.index ?? baseIndex), ...(displayedMap?.index ? { caseStudies: caseData?.caseStudies } : caseData), questions: (displayedMap?.index ?? baseIndex).questions.map(q => {
             const fields = shared.revisions.find(r => r.resource === `questions/${q.id}`)?.fields;
             return fields ? { ...q, label: fields.title, addresses: fields.addresses.split(",").map(s => s.trim()).filter(Boolean), bucket: (fields.bucket || undefined) as typeof q.bucket } : q;
-        }) }), [caseData, shared, mapCatalog]);
+        }) }), [caseData, shared, displayedMap]);
     const [route, setRoute] = useState<RouteState>(bootRoute);
     const [reader, dispatchCase] = useReducer(caseReducer, null, () => loadCaseDraft());
     const [walkthroughOpen, setWalkthroughOpen] = useState(false);
@@ -91,12 +133,12 @@ export function App() {
         else
             dialog.setAttribute("open", "");
     }, [inviteWalkthrough]);
-    const walkthroughSnapshot = useRef<{
-        route: RouteState;
-        reader: ReaderState | null;
-        filters: boolean;
-        panel: boolean;
-    } | null>(null);
+    const walkthroughSnapshot = useRef<TutorialState | null>(null);
+    const caseUi = useRef<CaseUi | null>(null);
+    const [caseUiRestore, setCaseUiRestore] = useState<{
+        key: number;
+        ui: CaseUi | null;
+    }>({ key: 0, ui: null });
     const [caseError, setCaseError] = useState("");
     const [caseSaved, setCaseSaved] = useState(true);
     const [casePreview, setCasePreview] = useState(false);
@@ -176,7 +218,7 @@ export function App() {
     const graph = useMemo(() => buildGraph(index, columnsKey ? columnsKey.split(",") : []), [columnsKey, index]);
     const [originalProse, setProse] = useState<ProseBundle | null>(null);
     const prose = useMemo(() => {
-        const source = mapCatalog?.prose ?? originalProse;
+        const source = displayedMap?.prose ?? originalProse;
         if (!source)
             return null;
         const updated = { docs: { ...source.docs }, references: { ...source.references } };
@@ -195,19 +237,54 @@ export function App() {
                 updated.docs[key] = { ...updated.docs[key], html: sharedMarkdown(revision.fields.body, index, updated.references), markdown: revision.fields.body };
         }
         return updated;
-    }, [originalProse, shared, index, mapCatalog]);
+    }, [originalProse, shared, index, displayedMap]);
     const [nodeHover, setNodeHover] = useState<HoverTarget | null>(null);
     const [panelOpen, setPanelOpen] = useState(() => parseHash(window.location.hash).selection.length > 0);
     const [foldAnchor, setFoldAnchor] = useState<string | null>(null);
     const [foldOverrides, setFoldOverrides] = useState<string[]>([]);
-    const foldContext = JSON.stringify([route.selection, route.filters.story, route.filters.hidden]);
-    useEffect(() => setFoldOverrides([]), [foldContext]);
+    const foldContextOf = (r: RouteState) => JSON.stringify([r.selection, r.filters.story, r.filters.hidden]);
+    const foldContext = foldContextOf(route);
+    // A restored view brings its overrides with it; any other change of context clears them.
+    const restoredFold = useRef<{
+        context: string;
+        fold: string[];
+    } | null>(null);
+    useEffect(() => {
+        const restored = restoredFold.current;
+        restoredFold.current = null;
+        setFoldOverrides(restored?.context === foldContext ? restored.fold : []);
+    }, [foldContext]);
     const [filterBarOpen, setFilterBarOpen] = useState(() => !window.matchMedia?.(NARROW).matches);
     const [theme, setTheme] = useState<string>(() => document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+    /** Everything a tutorial step can change, so leaving or stepping back can undo it. */
+    const captureTutorial = (): TutorialState => ({
+        route: structuredClone(route), reader, filters: filterBarOpen, panel: panelOpen, preview: casePreview,
+        fold: foldOverrides, anchor: foldAnchor, caseUi: caseUi.current, editing: localEditing,
+        menu: !!document.querySelector<HTMLDetailsElement>("details.case-menu")?.open,
+    });
+    const restoreTutorial = (state: TutorialState) => {
+        dispatchCase({ type: "restore-reader", state: state.reader });
+        setRoute(state.route);
+        replaceHash(state.route);
+        setFilterBarOpen(state.filters);
+        setPanelOpen(state.panel);
+        setCasePreview(state.preview);
+        restoredFold.current = { context: foldContextOf(state.route), fold: state.fold };
+        setFoldOverrides(state.fold);
+        setFoldAnchor(state.anchor);
+        // Remounting the case workspace is the only way to reset its view state.
+        setCaseUiRestore(r => ({ key: r.key + 1, ui: state.caseUi }));
+        setLocalEditing(state.editing);
+        setTimeout(() => {
+            const menu = document.querySelector<HTMLDetailsElement>("details.case-menu");
+            if (menu)
+                menu.open = state.menu;
+        }, 0);
+    };
     const startWalkthrough = () => {
         if (walkthroughSnapshot.current)
             return;
-        walkthroughSnapshot.current = { route: structuredClone(route), reader, filters: filterBarOpen, panel: panelOpen };
+        walkthroughSnapshot.current = captureTutorial();
         setInviteWalkthrough(false);
         dismissWalkthroughInvitation();
         setWalkthroughOpen(true);
@@ -218,13 +295,8 @@ export function App() {
         setWalkthroughOpen(false);
         setCaseError("");
         setCasePreview(false);
-        if (!snapshot)
-            return;
-        dispatchCase({ type: "restore-reader", state: snapshot.reader });
-        setRoute(snapshot.route);
-        replaceHash(snapshot.route);
-        setFilterBarOpen(snapshot.filters);
-        setPanelOpen(snapshot.panel);
+        if (snapshot)
+            restoreTutorial({ ...snapshot, preview: false });
     };
     const walkthroughMap = (phase: "entry" | "map" = "map") => {
         if (!walkthroughSnapshot.current)
@@ -279,7 +351,7 @@ export function App() {
                 return;
             const mod = await import("../dev/editor/mount.js");
             if (!stale)
-                setDevtools(mod.create({ token: data.token!, index }));
+                setDevtools(mod.create({ request: mod.serverRequest(data.token!), index }));
         })
             .catch(() => {
         });
@@ -287,6 +359,15 @@ export function App() {
             stale = true;
         };
     }, []);
+    useEffect(() => {
+        if (!localEditing || !localStore)
+            return;
+        let stale = false;
+        import("../dev/editor/mount.js").then(mod => { if (!stale)
+            setDevtools(mod.create({ request: localStore.request, index, local: true })); }).catch(error => setLocalError(`The editor could not be loaded. ${String(error)}`));
+        return () => { stale = true; setDevtools(undefined); };
+    }, [localEditing, localStore]);
+    useEffect(() => devtools?.setIndex?.(index), [devtools, index]);
     const editable = devtools?.prose;
     useEffect(() => {
         const onPop = () => setRoute((r) => {
@@ -718,6 +799,7 @@ export function App() {
         <span class="spacer"/>
         {route.view.kind === "tree" && caseMenu}
         {route.view.kind === "tree" && <button class="btn" onClick={openOverview} title="Show the full range of pathways with context columns hidden">Map overview</button>}
+        {localCapable && route.view.kind === "tree" && (localEditing || !devtools) && <button class="btn" data-walkthrough="map-edit" aria-pressed={localEditing ? "true" : "false"} onClick={toggleLocalEditing} title="Edit a copy of the map that is saved only in this browser">{localEditing ? "Stop editing" : "Edit map"}</button>}
         {route.view.kind === "tree" && <button class="btn" data-walkthrough="map-context" aria-pressed={!contextHidden} onClick={toggleContext} title="Show or hide component and stage columns without changing the map's prerequisites">{contextHidden ? "Show context" : "Hide context"}</button>}
         
         {route.view.kind === "tree" && (<button data-walkthrough="map-filters" class={`btn ${!filterBarOpen && filtersActive ? "set" : ""}`} aria-expanded={filterBarOpen ? "true" : "false"} aria-controls="filter-bar" onClick={() => setFilterBarOpen((open) => !open)} title={filterBarOpen
@@ -742,6 +824,8 @@ export function App() {
         </button>
       </header>
       {mapError && <div class="shared-notice" role="status">{mapError}<button onClick={() => setMapError("")}>Dismiss</button></div>}
+      {localError && <div class="shared-notice" role="alert">{localError}<button onClick={() => setLocalError("")}>Dismiss</button></div>}
+      {localStore && localState && (localEditing || localState.changed || localState.recovered) && route.view.kind === "tree" && <LocalMapBar store={localStore} state={localState} editing={localEditing} onStop={() => setLocalEditing(false)}/>}
       {route.view.kind === "bibliography" && sharedError && <div class="shared-notice" role="status">{sharedError}<button onClick={() => setSharedError("")}>Dismiss</button></div>}
 
       <div class="tabs" role="tablist">
@@ -773,7 +857,7 @@ export function App() {
         {mapRestoreId && <section class="doc admin-console"><MapRestoreReview revisionId={mapRestoreId} onPublished={setMapCatalog} onClose={() => setMapRestoreId(null)}/></section>}
         {caseError && <div class="case-error" role="alert">{caseError}<button onClick={leaveCase}>Return to map</button></div>}
         {isCase && (!reader || caseLoading) && !caseError && <p role="status">Loading case study…</p>}
-        {isCase && reader && !caseLoading && !caseError && <CaseWorkspace toolbarStart={caseMenu} actions={<CaseActions localCases={devtools?.localCases} index={index} prose={prose} reader={reader} dispatch={dispatchCase} showPreview={casePreview} onShare={() => setCasePreview(true)} onPreviewClose={() => setCasePreview(false)} onSaved={doc => setRoute(r => {
+        {isCase && reader && !caseLoading && !caseError && <CaseWorkspace key={caseUiRestore.key} ui={caseUiRestore.ui} onUi={ui => { caseUi.current = ui; }} toolbarStart={caseMenu} actions={<CaseActions localCases={devtools?.localCases} embedMap={!!localState?.changed} index={index} prose={prose} reader={reader} dispatch={dispatchCase} showPreview={casePreview} onShare={() => setCasePreview(true)} onPreviewClose={() => setCasePreview(false)} onSaved={doc => setRoute(r => {
                     if (r.view.kind !== "case")
                         return r;
                     const next: RouteState = { ...r, view: { kind: "case", id: doc.identity.revisionId, step: r.view.step } };
@@ -805,13 +889,13 @@ export function App() {
         {route.view.kind === "bibliography" && <BibliographyView prose={prose} catalog={shared} onPublished={published} requestedSource={route.view.source}/>}
         {route.view.kind === "questions" && <div class="doc"><h2>Research questions</h2><p>This section has been retired. Existing research notes remain stored.</p><button class="btn" onClick={() => setView({ kind: "tree" })}>Open the map</button></div>}
 
-        {route.view.kind === "page" && (<PageView graph={graph} prose={prose} nav={nav} slug={route.view.slug} editable={editable}/>)}
+        {route.view.kind === "page" && (<PageView graph={graph} prose={prose} nav={nav} slug={route.view.slug} editable={localEditing ? undefined : editable}/>)}
       </main>
 
       <HoverCard content={hoverContent} x={hoverX} y={hoverY} via={hoverVia}/>
       
       <TipLayer />
-      {walkthroughOpen && <Walkthrough open onExit={exitWalkthrough} onOpenMap={walkthroughMap}/>}
+      {walkthroughOpen && <Walkthrough open onExit={exitWalkthrough} onOpenMap={walkthroughMap} capture={captureTutorial} restore={state => restoreTutorial(state as TutorialState)} mapEditing={localCapable && (localEditing || !devtools)}/>}
     </div>
     {splash}
     </>);

@@ -12,6 +12,8 @@ import { draftDocument } from './case-edit.js';
 import type { DevTools } from './devtools.js';
 interface Props {
     localCases?:DevTools['localCases'];
+    /** The map has local edits, so a shared case must carry the map data it uses. */
+    embedMap?: boolean;
     index?: GraphIndex;
     prose?: ProseBundle | null;
     reader: ReaderState;
@@ -21,7 +23,7 @@ interface Props {
     onShare: () => void;
     onPreviewClose: () => void;
 }
-export function CaseActions({ localCases, index, prose, reader, dispatch, onSaved, showPreview, onShare, onPreviewClose }: Props) {
+export function CaseActions({ localCases, embedMap = false, index, prose, reader, dispatch, onSaved, showPreview, onShare, onPreviewClose }: Props) {
     const [localStatus,setLocalStatus]=useState('');
     const draftWrites=useRef(Promise.resolve());
     const draftId=useRef(crypto.randomUUID());
@@ -103,7 +105,21 @@ export function CaseActions({ localCases, index, prose, reader, dispatch, onSave
             return null;
         }
     };
-    const shown = showPreview ? prepared : null;
+    const preview = useMemo(() => {
+        if (!showPreview || !prepared)
+            return { doc: null, error: "" };
+        if (!embedMap)
+            return { doc: prepared, error: "" };
+        try {
+            if (!index || !prose)
+                throw Error("Wait for the map descriptions to finish loading.");
+            return { doc: parseCase(bundleCase(prepared, index, prose)), error: "" };
+        }
+        catch (e) {
+            return { doc: null, error: `This case cannot be shared with your local map edits. ${e instanceof Error ? e.message : String(e)}` };
+        }
+    }, [showPreview, prepared, embedMap, index, prose]);
+    const shown = preview.doc;
     const publish = async () => {
         if (!shown || sharing)
             return;
@@ -162,7 +178,9 @@ export function CaseActions({ localCases, index, prose, reader, dispatch, onSave
       <p>HTML opens directly in a browser. PDF includes an overview, steps and node descriptions. JSON imports into another copy of this application. Existing site links still require access to their original site.</p>
       <button onClick={()=>setPortable(null)}>Close export preview</button>
     </section>}
+      {preview.error && <p role="alert">{preview.error}</p>}
       {shown && <section class="case-share-preview"><h4>Share preview: {shown.content.title}</h4><p>{shown.content.premise}</p><p>All notes, sources, context and archived stories below are included.</p>
+        {shown.embeddedMap && <p>Your map has local edits, so this case includes the {shown.embeddedMap.nodes.length} nodes it uses and their descriptions as plain text. Readers see that copy, not the original map.</p>}
         <details><summary>Included document</summary><pre>{JSON.stringify(shown, null, 2)}</pre></details>
         <p>{hosting().capabilities.sharing ? "Sharing saves this revision to the site. Anyone with its link and access to the site can read all included notes." : "Export this case study as a file to share it. Online sharing is not connected."}</p>
         {hosting().capabilities.sharing && <button disabled={sharing} onClick={publish}>{sharing ? "Sharing…" : "Share this revision"}</button>}
