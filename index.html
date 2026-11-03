@@ -8,13 +8,7 @@
       name="description"
       content="An interactive incident map with local editing and case studies."
     />
-    <script>
-      // Applied before first paint so the page never flashes the wrong theme.
-      try {
-        const saved = localStorage.getItem("threatmap-theme");
-        if (saved === "light" || saved === "dark") document.documentElement.setAttribute("data-theme", saved);
-      } catch {}
-    </script>
+    <script src="./theme.js"></script>
   </head>
   <body>
     <div id="app"></div>

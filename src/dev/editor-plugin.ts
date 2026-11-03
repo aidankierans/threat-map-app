@@ -1,11 +1,13 @@
 import { resolve, sep } from "node:path";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin, ViteDevServer } from "vite";
 import matter from "gray-matter";
-import { z } from "zod";
-import { ROOT } from "../build/config.js";
+import { ROOT, layersConfig } from "../build/config.js";
+import { defaultsFor, formSchemaFor } from "./editor/form-schema.js";
+import { applyCreation, planCreation, saveLocalCase, localPath } from './local-data.js';
+import { parseCase } from '../app/case-codec.js';
 import { runBuild, type BuildResult } from "../build/run.js";
 import { SCHEMAS, type LayerName } from "../build/schema.js";
 import type { GraphIndex } from "../types.js";
@@ -29,26 +31,7 @@ export function stripLeads(index: GraphIndex): string {
 export function classifyRebuild(prev: GraphIndex, next: GraphIndex): "prose" | "reload" {
     return stripLeads(prev) === stripLeads(next) ? "prose" : "reload";
 }
-const formSchemas = new Map<LayerName, Record<string, unknown>>();
-export function formSchemaFor(layer: LayerName): Record<string, unknown> {
-    let cached = formSchemas.get(layer);
-    if (!cached) {
-        cached = z.toJSONSchema(SCHEMAS[layer], { io: "input" }) as Record<string, unknown>;
-        formSchemas.set(layer, cached);
-    }
-    return cached;
-}
-function defaultsFor(layer: LayerName): Record<string, unknown> {
-    const props = (formSchemaFor(layer).properties ?? {}) as Record<string, {
-        default?: unknown;
-    }>;
-    const defaults: Record<string, unknown> = {};
-    for (const [key, spec] of Object.entries(props)) {
-        if (spec && typeof spec === "object" && "default" in spec)
-            defaults[key] = spec.default;
-    }
-    return defaults;
-}
+export { formSchemaFor };
 interface SaveRequest {
     id: string;
     baseHash: string;
@@ -317,6 +300,32 @@ export function editorPlugin(): Plugin {
                             title: ref.title,
                         })),
                     });
+                }
+                if (req.method === 'GET' && url === '/__editor/create-options') {
+                    return json(res,200,{layers:{...layersConfig.layers,...layersConfig.auxiliary},gates:layersConfig.gates});
+                }
+                if (req.method === 'GET' && url === '/__editor/case-drafts') {
+                    const dir=localPath(ROOT,'.editor-drafts/cases');
+                    const drafts=existsSync(dir)?readdirSync(dir).filter(f=>f.endsWith('.json')).flatMap(file=>{
+                        try{return [parseCase(readFileSync(localPath(ROOT,`.editor-drafts/cases/${file}`),'utf8'))];}catch{return [];}
+                    }):[];
+                    return json(res,200,{drafts});
+                }
+                if(req.method==='POST' && ['/__editor/create','/__editor/case','/__editor/case-draft'].includes(url)) {
+                    readBody(req).then(text=>{
+                        const payload=JSON.parse(text);
+                        if(url==='/__editor/create'){
+                            const changes=planCreation(payload,runBuild({write:false}));
+                            const sources=applyCreation(ROOT,changes);
+                            for(const change of changes)selfWrites.set(resolve(ROOT,change.source),sha256(change.text));
+                            json(res,200,{sources});rebuild('created local node or group');return;
+                        }
+                        const result=saveLocalCase(ROOT,payload,url==='/__editor/case-draft');
+                        selfWrites.set(resolve(ROOT,result.source),sha256(readFileSync(resolve(ROOT,result.source))));
+                        json(res,200,{source:result.source});
+                        if(url==='/__editor/case')rebuild('saved local case revision');
+                    }).catch((error:Error)=>json(res,400,{error:error.message}));
+                    return;
                 }
                 if (req.method === "GET" && url.startsWith("/__editor/doc?")) {
                     const id = new URL(url, "http://localhost").searchParams.get("id");

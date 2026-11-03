@@ -22,7 +22,14 @@ function esc(s: string): string {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
 }
-const marked = new Marked({ gfm: true, breaks: false });
+// Web links open in a new tab, like citations, so following one does not leave the map.
+const marked = new Marked({ gfm: true, breaks: false, renderer: {
+        link(this: import("marked").Renderer, { href, title, tokens }: import("marked").Tokens.Link) {
+            const label = this.parser.parseInline(tokens);
+            const external = /^https?:\/\//i.test(href) ? ' target="_blank" rel="noopener"' : "";
+            return `<a href="${esc(href)}"${title ? ` title="${esc(title)}"` : ""}${external}>${label}</a>`;
+        },
+    } });
 export function renderMarkdown(md: string, ctx: RenderContext): RenderResult {
     const errors: string[] = [];
     const cites: string[] = [];
@@ -62,6 +69,9 @@ export function renderMarkdown(md: string, ctx: RenderContext): RenderResult {
                     return `<span class="cite cite-broken" title="unknown citation key">[?]</span>`;
                 }
                 cites.push(key);
+                // A source link is followed by readers, so only web links are ever emitted.
+                if (!/^https?:\/\//i.test(ref.url))
+                    return `<span class="cite" data-cite="${esc(key)}" title="${esc(ref.title)}">[source]</span>`;
                 return (`<a class="cite" data-cite="${esc(key)}" href="${esc(ref.url)}" ` +
                     `target="_blank" rel="noopener" title="${esc(ref.title)}" ` +
                     `aria-label="Source: ${esc(ref.title)}">[source]</a>`);

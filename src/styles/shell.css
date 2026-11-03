@@ -10,6 +10,8 @@
 .reference-fields dt { font-weight: 600; color: var(--ink-2); }
 .reference-fields dd { margin: 0; overflow-wrap: anywhere; }
 .shared-notice { padding: 6px 12px; flex: 0 0 auto; max-height: 20vh; overflow: auto; font-size: 12px; }
+.local-map-bar p { margin: 0 0 6px; }
+.local-map-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .admin-console { position: absolute; inset: 0; z-index: 25; background: var(--plane); overflow: auto; max-width: none; }
 .admin-console pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 700px) {

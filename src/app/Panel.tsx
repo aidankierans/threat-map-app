@@ -183,7 +183,7 @@ function Evidence({ prose, cites }: {
             if (!ref)
                 return null;
             return (<li key={key}>
-              <a href={ref.url} target="_blank" rel="noopener" data-cite={key}>
+              <a href={/^https?:\/\//i.test(ref.url) ? ref.url : undefined} target="_blank" rel="noopener" data-cite={key}>
                 {ref.title}
               </a>
             </li>);

@@ -36,7 +36,7 @@ export function loadCaseDraft(): ReaderState | null {
     }
 }
 export function prepareCase(state: ReaderState, separate = false): AnalysisDocument {
-    const unchanged = state.baseline && JSON.stringify(state.draft) === JSON.stringify({ map: state.baseline.map, content: state.baseline.content });
+    const unchanged = state.baseline && JSON.stringify(state.draft) === JSON.stringify({ map: state.baseline.map, content: state.baseline.content, ...(state.baseline.embeddedMap ? { embeddedMap: state.baseline.embeddedMap } : {}) });
     if (unchanged && !separate)
         return state.baseline!;
     return parseCase({ ...draftDocument(state),

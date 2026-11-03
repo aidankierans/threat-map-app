@@ -39,9 +39,16 @@ For Vitest, set `test.server.deps.inline` to
 
 Call `configureHosting` from `app/hosting.ts` before mounting the application.
 The adapter supplies `request(service, options)`, `editorLoginUrl(next)` and
-capabilities (`sharing`, `feedback`, `history`). Requests return a standard
-Response, allowing any HTTP client, transport, or local implementation.
-The default adapter returns read-only local catalogs without network calls.
+capabilities (`sharing`, `feedback`, `history`, and optional `localMap`).
+Requests return a standard Response, allowing any HTTP client, transport, or
+local implementation. The default adapter returns read-only local catalogs
+without network calls. `localMap` needs no service: readers edit a copy of the
+map in their own browser, built from `data/map-source.json`.
+
+Serve the application with a Content-Security-Policy that disallows inline
+script, for example `script-src 'self'` plus the origins of any services you
+add. The application uses no inline script, and the policy is a second
+safeguard if text from map files or shared cases is ever rendered unescaped.
 An adapter selects its own URLs; the application contains no deployment URLs.
 
 `options` contains `path` (query or resource suffix), optional JSON `body`,

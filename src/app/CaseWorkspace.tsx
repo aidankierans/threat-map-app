@@ -1,3 +1,4 @@
+import { portableIndex, portableProse } from "./portable-map.js";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import type { GraphIndex, ProseBundle } from "../types.js";
@@ -27,16 +28,27 @@ interface Props {
     onStep: (n: number) => void;
     onLeave: () => void;
     saved: boolean;
+    /** View state to start from, so the tutorial's Back button can return to an earlier step exactly. */
+    ui?: CaseUi | null;
+    onUi?: (ui: CaseUi | null) => void;
 }
-export function CaseWorkspace({ toolbarStart, actions, index, prose, reader, dispatch, step: requested, onStep: advance, onLeave, saved }: Props) {
+export interface CaseUi {
+    focus: boolean;
+    detail: string | null;
+    choices: string[];
+    timeline: boolean;
+}
+export function CaseWorkspace({ toolbarStart, actions, index: hostIndex, prose: hostProse, reader, dispatch, step: requested, onStep: advance, onLeave, saved, ui, onUi }: Props) {
     const doc = useMemo(() => draftDocument(reader), [reader]);
+    const index = useMemo(() => doc.embeddedMap ? portableIndex(doc.embeddedMap, doc.map) : hostIndex, [doc.embeddedMap, doc.map, hostIndex]);
+    const prose = useMemo(() => doc.embeddedMap ? portableProse(doc.embeddedMap, index) : hostProse, [doc.embeddedMap, index, hostProse]);
     const graph = useMemo(() => buildGraph(index, doc.content.view.columns), [index, doc.content.view.columns]);
     const [editing, setEditing] = useState(false);
     const [limit, setLimit] = useState(true);
     const [actorsVisible, setActorsVisible] = useState(false);
-    const [timelineVisible, setTimelineVisible] = useState(true);
-    const [detail, setDetail] = useState<string | null>(null);
-    const [detailChoices, setDetailChoices] = useState<string[]>([]);
+    const [timelineVisible, setTimelineVisible] = useState(ui?.timeline ?? true);
+    const [detail, setDetail] = useState<string | null>(ui?.detail ?? null);
+    const [detailChoices, setDetailChoices] = useState<string[]>(ui?.choices ?? []);
     const columns = useRef<HTMLDivElement>(null);
     const returnPosition = useRef<{
         panel: number;
@@ -90,7 +102,9 @@ export function CaseWorkspace({ toolbarStart, actions, index, prose, reader, dis
         ids: string[];
         sequence: number;
     } | null>(null);
-    const [focusCurrentStep, setFocusCurrentStep] = useState(false);
+    const [focusCurrentStep, setFocusCurrentStep] = useState(ui?.focus ?? false);
+    useLayoutEffect(() => onUi?.({ focus: focusCurrentStep, detail, choices: detailChoices, timeline: timelineVisible }), [focusCurrentStep, detail, detailChoices, timelineVisible]);
+    useLayoutEffect(() => () => onUi?.(null), []);
     const step = Math.max(0, Math.min(doc.content.presentation.steps.length - 1, requested));
     const [playing, setPlaying] = useState(false);
     const lastStep = doc.content.presentation.steps.length - 1;
@@ -227,7 +241,7 @@ export function CaseWorkspace({ toolbarStart, actions, index, prose, reader, dis
             }
         }
     };
-    return <div class="case-workspace">
+    return <div class="case-workspace">{doc.embeddedMap && <p role="status">Portable case: using the included map data. Your main map is unchanged.</p>}
     <div class="case-toolbar">{toolbarStart}<button data-walkthrough="case-leave" onClick={onLeave}>Leave case study</button><button aria-pressed={editing} onClick={() => { setEditing(!editing); setPick(null); }}>{editing ? "Exit editing mode" : "Enter editing mode"}</button>
       <button aria-expanded={timelineVisible} aria-controls="case-timeline" onClick={() => setTimelineVisible(!timelineVisible)}>{timelineVisible ? "Hide timeline" : "Show timeline"}</button>
       {editing && <><button disabled={!reader.undo.length} onClick={() => dispatch({ type: "undo" })}>Undo</button><button disabled={!reader.redo.length} onClick={() => dispatch({ type: "redo" })}>Redo</button></>}
